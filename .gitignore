@@ -1,2 +1,6 @@
 env
 workspace.code-workspace
+src/simulator/memory/__pycache__/memory.cpython-39.pyc
+src/simulator/memory/__pycache__/__init__.cpython-39.pyc
+.gitignore
+src/simulator/test_file.py

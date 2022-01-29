@@ -4,7 +4,7 @@ from os import path
 
 # import the logging.ini file
 basepath = path.dirname(__file__)
-logging_ini_filepath = path.abspath(path.join(basepath, "..", "logging_config.ini"))
+logging_ini_filepath = path.abspath(path.join(basepath, "..", "logging.ini"))
 fileConfig(logging_ini_filepath)
 logger = logging.getLogger()
 
@@ -17,7 +17,7 @@ class MemoryData:
 
 
 class Memory(MemoryData):
-    def __init__(self) -> None:
+    def __init__(self):
         self.word_length = 16
         self.memory_length = 2048
         self.memory_data = list(MemoryData(i, None) for i in range(self.memory_length))
@@ -52,7 +52,16 @@ class Memory(MemoryData):
             logger.critical('Addresses less than 6 are prohibited as they are reserved spaces: address %s, value: %s' % (str(address), str(value)))
             raise Exception('Addresses less than 6 are prohibited as they are reserved spaces')
 
+        # do we need logic for if the address is already set to another value? 
+
         if not address > self.memory_length or not value > 65536:
+            
+            # check if value already exists at this address. For now will continue to overwrite the value
+            get_value = self.get(address, binary=False)
+            if get_value is not None:
+                logger.info('Value already exists at this address in memory. Will continue to overwrite this value.. Previous value: %s' % str(get_value))
+            
+            # set the value attribute of the object
             setattr(self.memory_data[address], 'value', value)
             logger.info('address %s and value %s set' % (str(address), str(value)))
     
@@ -70,7 +79,6 @@ class Memory(MemoryData):
         Returns:
             Updates the memory with the given address and value
         '''
-        assert isinstance(address, str)
         if binary: 
             address = int(address, 2)
         else: 
@@ -85,10 +93,7 @@ class Memory(MemoryData):
         except Exception as e: 
             logger.debug('Exception occurs during retrieval of memory at address %s. Exception: %s' % (str(address), str(e)))
 
-        if value is None:
-            logger.info('Value at %s address is not set. Value is %s' % (str(address), str(value)))
-        else: 
-            return value
+        return value
 
 
 
