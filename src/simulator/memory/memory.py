@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import logging
 from logging.config import fileConfig
 from os import path
@@ -119,6 +118,4 @@ class Memory(MemoryData):
         pass
 
     
-=======
->>>>>>> a23cdcfb7dd7d5366c05fe73940a430ecf5f6299
 
