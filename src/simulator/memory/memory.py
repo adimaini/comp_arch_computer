@@ -16,8 +16,6 @@ class MemoryData:
 
 class Memory(MemoryData):
 
-    # memory_table_data: the index represents the address and each element is a list with two element[binary, decimal]
-    global_memory_table_data = []
 
     def __init__(self):
         self.word_length = 16
