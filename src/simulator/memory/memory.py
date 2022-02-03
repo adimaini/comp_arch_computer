@@ -14,9 +14,11 @@ class MemoryData:
         self.address = address
         self.value = value
 
-
-
 class Memory(MemoryData):
+
+    # memory_table_data: the index represents the address and each element is a list with two element[binary, decimal]
+    global_memory_table_data = []
+
     def __init__(self):
         self.word_length = 16
         self.memory_length = 2048
@@ -94,8 +96,6 @@ class Memory(MemoryData):
             logger.debug('Exception occurs during retrieval of memory at address %s. Exception: %s' % (str(address), str(e)))
 
         return value
-
-
 
     def expand_memory(self):
         'expand the memory to length of 4096'

@@ -9,6 +9,9 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_MainWindow(object):
+    gloabl_under_process_status = "background:green"
+    gloabl_finish_process_status = "background:red"
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setWindowModality(QtCore.Qt.NonModal)
@@ -27,6 +30,7 @@ class Ui_MainWindow(object):
         font.setFamily("Consolas")
         font.setPointSize(10)
         self.btn_IPL.setFont(font)
+        self.btn_IPL.setStyleSheet(Ui_MainWindow.gloabl_finish_process_status)
         self.btn_IPL.setObjectName("btn_IPL")
 
         # Load
@@ -74,33 +78,23 @@ class Ui_MainWindow(object):
         self.btn_Run.setFont(font)
         self.btn_Run.setObjectName("btn_Run")
 
-        # Halt
-        self.btn_Halt = QtWidgets.QPushButton(self.centralwidget)
-        self.btn_Halt.setGeometry(QtCore.QRect(617, 11, 93, 29))
+        self.lbl_run = QtWidgets.QLabel(self.centralwidget)
+        self.lbl_run.setGeometry(QtCore.QRect(620, 25, 31, 16))
         font = QtGui.QFont()
         font.setFamily("Consolas")
-        font.setPointSize(10)
-        self.btn_Halt.setFont(font)
-        self.btn_Halt.setObjectName("btn_Halt")
+        font.setPointSize(8)
+        self.lbl_run.setFont(font)
+        self.lbl_run.setStyleSheet(Ui_MainWindow.gloabl_finish_process_status)
+        self.lbl_run.setObjectName("lbl_run")
 
-        # For input store
-        self.le_store = QtWidgets.QLineEdit(self.centralwidget)
-        self.le_store.setGeometry(QtCore.QRect(810, 10, 191, 31))
+        self.lbl_halt = QtWidgets.QLabel(self.centralwidget)
+        self.lbl_halt.setGeometry(QtCore.QRect(620, 4, 31, 16))
         font = QtGui.QFont()
         font.setFamily("Consolas")
-        font.setPointSize(10)
-        self.le_store.setFont(font)
-        self.le_store.setStatusTip("")
-        self.le_store.setAccessibleDescription("")
-        self.le_store.setObjectName("le_store")
-        self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setGeometry(QtCore.QRect(740, 9, 81, 31))
-        font = QtGui.QFont()
-        font.setFamily("Consolas")
-        font.setPointSize(12)
-        self.label.setFont(font)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setObjectName("label")
+        font.setPointSize(8)
+        self.lbl_halt.setFont(font)
+        self.lbl_halt.setStyleSheet(Ui_MainWindow.gloabl_finish_process_status)
+        self.lbl_halt.setObjectName("lbl_halt")
 
         # GPR0
         # <editor-fold desc="lbl_gpr0">
@@ -323,6 +317,7 @@ class Ui_MainWindow(object):
         self.btn_load_ix3.setObjectName("btn_load_ix3")
 
         # PC
+        # <editor-fold desc="lbl_pc">
         self.lbl_pc = QtWidgets.QLabel(self.centralwidget)
         self.lbl_pc.setGeometry(QtCore.QRect(397, 53, 33, 23))
         font = QtGui.QFont()
@@ -333,6 +328,7 @@ class Ui_MainWindow(object):
         self.lbl_pc.setFont(font)
         self.lbl_pc.setAlignment(QtCore.Qt.AlignCenter)
         self.lbl_pc.setObjectName("lbl_pc")
+        # </editor-fold>
         self.le_pc = QtWidgets.QLineEdit(self.centralwidget)
         self.le_pc.setGeometry(QtCore.QRect(434, 54, 131, 24))
         font = QtGui.QFont()
@@ -355,6 +351,7 @@ class Ui_MainWindow(object):
         self.btn_load_pc.setObjectName("btn_load_pc")
 
         # MAR
+        # <editor-fold desc="lbl_MAR">
         self.lbl_mar = QtWidgets.QLabel(self.centralwidget)
         self.lbl_mar.setGeometry(QtCore.QRect(397, 92, 33, 23))
         font = QtGui.QFont()
@@ -365,6 +362,7 @@ class Ui_MainWindow(object):
         self.lbl_mar.setFont(font)
         self.lbl_mar.setAlignment(QtCore.Qt.AlignCenter)
         self.lbl_mar.setObjectName("lbl_mar")
+        # </editor-fold>
         self.le_mar = QtWidgets.QLineEdit(self.centralwidget)
         self.le_mar.setGeometry(QtCore.QRect(434, 92, 131, 24))
         font = QtGui.QFont()
@@ -387,6 +385,7 @@ class Ui_MainWindow(object):
         self.btn_load_mar.setObjectName("btn_load_mar")
 
         # MBR
+        # <editor-fold desc="lbl_MBR">
         self.lbl_mbr = QtWidgets.QLabel(self.centralwidget)
         self.lbl_mbr.setGeometry(QtCore.QRect(372, 132, 33, 23))
         font = QtGui.QFont()
@@ -397,6 +396,7 @@ class Ui_MainWindow(object):
         self.lbl_mbr.setFont(font)
         self.lbl_mbr.setAlignment(QtCore.Qt.AlignCenter)
         self.lbl_mbr.setObjectName("lbl_mbr")
+        # </editor-fold>
         self.le_mbr = QtWidgets.QLineEdit(self.centralwidget)
         self.le_mbr.setGeometry(QtCore.QRect(412, 134, 154, 24))
         font = QtGui.QFont()
@@ -419,6 +419,7 @@ class Ui_MainWindow(object):
         self.btn_load_mbr.setObjectName("btn_load_mbr")
 
         # IR
+        # <editor-fold desc="lbl_IR">
         self.lbl_ir = QtWidgets.QLabel(self.centralwidget)
         self.lbl_ir.setGeometry(QtCore.QRect(372, 170, 33, 23))
         font = QtGui.QFont()
@@ -429,6 +430,7 @@ class Ui_MainWindow(object):
         self.lbl_ir.setFont(font)
         self.lbl_ir.setAlignment(QtCore.Qt.AlignCenter)
         self.lbl_ir.setObjectName("lbl_ir")
+        # </editor-fold>
         self.le_ir = QtWidgets.QLineEdit(self.centralwidget)
         self.le_ir.setGeometry(QtCore.QRect(412, 170, 154, 24))
         font = QtGui.QFont()
@@ -442,6 +444,7 @@ class Ui_MainWindow(object):
         self.le_ir.setObjectName("le_ir")
 
         # MFR
+        # <editor-fold desc="lbl_MFR">
         self.lbl_mfr = QtWidgets.QLabel(self.centralwidget)
         self.lbl_mfr.setGeometry(QtCore.QRect(460, 210, 33, 23))
         font = QtGui.QFont()
@@ -452,6 +455,7 @@ class Ui_MainWindow(object):
         self.lbl_mfr.setFont(font)
         self.lbl_mfr.setAlignment(QtCore.Qt.AlignCenter)
         self.lbl_mfr.setObjectName("lbl_mfr")
+        # </editor-fold>
         self.le_mfr = QtWidgets.QLineEdit(self.centralwidget)
         self.le_mfr.setGeometry(QtCore.QRect(504, 210, 61, 24))
         font = QtGui.QFont()
@@ -465,6 +469,7 @@ class Ui_MainWindow(object):
         self.le_mfr.setObjectName("le_mfr")
 
         # CC
+        # <editor-fold desc="lbl_CC">
         self.lbl_cc = QtWidgets.QLabel(self.centralwidget)
         self.lbl_cc.setGeometry(QtCore.QRect(460, 250, 33, 23))
         font = QtGui.QFont()
@@ -475,6 +480,7 @@ class Ui_MainWindow(object):
         self.lbl_cc.setFont(font)
         self.lbl_cc.setAlignment(QtCore.Qt.AlignCenter)
         self.lbl_cc.setObjectName("lbl_cc")
+        # </editor-fold>
         self.le_cc = QtWidgets.QLineEdit(self.centralwidget)
         self.le_cc.setGeometry(QtCore.QRect(504, 250, 61, 24))
         font = QtGui.QFont()
@@ -488,6 +494,7 @@ class Ui_MainWindow(object):
         self.le_cc.setObjectName("le_cc")
 
         # FR0
+        # <editor-fold desc="lbl_FRO">
         self.lbl_fr0 = QtWidgets.QLabel(self.centralwidget)
         self.lbl_fr0.setGeometry(QtCore.QRect(372, 284, 44, 23))
         font = QtGui.QFont()
@@ -497,6 +504,7 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         self.lbl_fr0.setFont(font)
         self.lbl_fr0.setObjectName("lbl_fr0")
+        # </editor-fold>
         self.le_fr0 = QtWidgets.QLineEdit(self.centralwidget)
         self.le_fr0.setGeometry(QtCore.QRect(412, 285, 154, 24))
         font = QtGui.QFont()
@@ -519,6 +527,7 @@ class Ui_MainWindow(object):
         self.le_fr1.setAlignment(QtCore.Qt.AlignCenter)
         self.le_fr1.setReadOnly(True)
         self.le_fr1.setObjectName("le_fr1")
+        # <editor-fold desc="LBL_FR1">
         self.lbl_fr1 = QtWidgets.QLabel(self.centralwidget)
         self.lbl_fr1.setGeometry(QtCore.QRect(372, 320, 44, 23))
         font = QtGui.QFont()
@@ -528,6 +537,7 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         self.lbl_fr1.setFont(font)
         self.lbl_fr1.setObjectName("lbl_fr1")
+        # </editor-fold>
 
         # <editor-fold desc="Title of Memory Managemant">
         self.lbl_title_memory = QtWidgets.QLabel(self.centralwidget)
@@ -548,7 +558,7 @@ class Ui_MainWindow(object):
         font.setFamily("Consolas")
         font.setPointSize(10)
         self.tb_memory_detail.setFont(font)
-        self.tb_memory_detail.setTabletTracking(True)
+        # self.tb_memory_detail.setTabletTracking(True)
         self.tb_memory_detail.setAutoFillBackground(False)
         self.tb_memory_detail.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.tb_memory_detail.setLineWidth(1)
@@ -557,12 +567,15 @@ class Ui_MainWindow(object):
         self.tb_memory_detail.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.tb_memory_detail.setDragEnabled(False)
         self.tb_memory_detail.setAlternatingRowColors(True)
-        self.tb_memory_detail.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        # self.tb_memory_detail.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tb_memory_detail.setTextElideMode(QtCore.Qt.ElideMiddle)
         self.tb_memory_detail.setShowGrid(True)
-        self.tb_memory_detail.setRowCount(2)
+
+        self.tb_memory_detail.setRowCount(2048)
         self.tb_memory_detail.setColumnCount(3)
         self.tb_memory_detail.setObjectName("tb_memory_detail")
+
+        # set the table's header
         item = QtWidgets.QTableWidgetItem()
         item.setTextAlignment(QtCore.Qt.AlignCenter)
         self.tb_memory_detail.setHorizontalHeaderItem(0, item)
@@ -572,10 +585,10 @@ class Ui_MainWindow(object):
         item = QtWidgets.QTableWidgetItem()
         item.setTextAlignment(QtCore.Qt.AlignCenter)
         self.tb_memory_detail.setHorizontalHeaderItem(2, item)
+
         self.tb_memory_detail.horizontalHeader().setCascadingSectionResizes(False)
         self.tb_memory_detail.horizontalHeader().setDefaultSectionSize(196)
         self.tb_memory_detail.horizontalHeader().setMinimumSectionSize(30)
-        self.tb_memory_detail.horizontalHeader().setSortIndicatorShown(False)
         self.tb_memory_detail.horizontalHeader().setStretchLastSection(False)
         self.tb_memory_detail.verticalHeader().setVisible(True)
         self.tb_memory_detail.verticalHeader().setCascadingSectionResizes(False)
@@ -636,6 +649,13 @@ class Ui_MainWindow(object):
         self.le_address_input.setText("")
         self.le_address_input.setAlignment(QtCore.Qt.AlignCenter)
         self.le_address_input.setObjectName("le_address_input")
+
+        # bind the max length for those input value
+        self.le_operation.setMaxLength(6)
+        self.le_gpr_input.setMaxLength(2)
+        self.le_ixr_input.setMaxLength(2)
+        self.le_ir_input.setMaxLength(1)
+        self.le_address_input.setMaxLength(5)
 
         # <editor-fold desc="Operation... label">
         self.lbl_ix3_2 = QtWidgets.QLabel(self.centralwidget)
@@ -719,7 +739,7 @@ class Ui_MainWindow(object):
         self.line_5.setObjectName("line_5")
         # </editor-fold>
 
-        #<editor-fold desc="raise">
+        # <editor-fold desc="raise">
         self.lbl_ir.raise_()
         self.line_2.raise_()
         self.btn_load_ix2.raise_()
@@ -737,7 +757,7 @@ class Ui_MainWindow(object):
         self.btn_ST.raise_()
         self.btn_SS.raise_()
         self.btn_Run.raise_()
-        self.btn_Halt.raise_()
+        # self.btn_Halt.raise_()
         self.line.raise_()
         self.lbl_gpr1.raise_()
         self.lbl_gpr2.raise_()
@@ -784,8 +804,10 @@ class Ui_MainWindow(object):
         self.lbl_ix3_5.raise_()
         self.lbl_ix3_6.raise_()
         self.line_5.raise_()
-        self.le_store.raise_()
-        self.label.raise_()
+        # self.le_store.raise_()
+        # self.label.raise_()
+        self.lbl_halt.raise_()
+        self.lbl_run.raise_()
         # </editor-fold>
 
         MainWindow.setCentralWidget(self.centralwidget)
@@ -798,14 +820,13 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "CSCI_6461_Simulator"))
         self.btn_IPL.setText(_translate("MainWindow", "IPL"))
         self.btn_load.setText(_translate("MainWindow", "Load"))
         self.btn_Store.setText(_translate("MainWindow", "Store"))
         self.btn_ST.setText(_translate("MainWindow", "St++"))
         self.btn_SS.setText(_translate("MainWindow", "SingleStep"))
         self.btn_Run.setText(_translate("MainWindow", "Run"))
-        self.btn_Halt.setText(_translate("MainWindow", "Halt"))
         self.lbl_gpr0.setText(_translate("MainWindow", "GPR0"))
         self.btn_load_gpr0.setText(_translate("MainWindow", "LD"))
         self.lbl_pc.setText(_translate("MainWindow", " PC"))
@@ -813,14 +834,13 @@ class Ui_MainWindow(object):
         self.lbl_mbr.setText(_translate("MainWindow", "MBR"))
         self.lbl_mfr.setText(_translate("MainWindow", "MFR"))
         self.btn_load_mbr.setText(_translate("MainWindow", "LD"))
-        self.lbl_title_memory.setText(_translate("MainWindow", "Memory Mangement"))
-        self.tb_memory_detail.setSortingEnabled(False)
+        self.lbl_title_memory.setText(_translate("MainWindow", "Memory Management"))
         item = self.tb_memory_detail.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Address"))
         item = self.tb_memory_detail.horizontalHeaderItem(1)
         item.setText(_translate("MainWindow", "Binary"))
         item = self.tb_memory_detail.horizontalHeaderItem(2)
-        item.setText(_translate("MainWindow", "Decemal"))
+        item.setText(_translate("MainWindow", "Decimal"))
         self.lbl_cc.setText(_translate("MainWindow", " CC"))
         self.lbl_fr0.setText(_translate("MainWindow", "FR0"))
         self.lbl_fr1.setText(_translate("MainWindow", "FR1"))
@@ -844,7 +864,56 @@ class Ui_MainWindow(object):
         self.lbl_ix3_4.setText(_translate("MainWindow", "IXR"))
         self.lbl_ix3_5.setText(_translate("MainWindow", "I"))
         self.lbl_ix3_6.setText(_translate("MainWindow", "Address"))
-        self.label.setText(_translate("MainWindow", "Input:"))
+        self.lbl_halt.setText(_translate("MainWindow", "HALT"))
+        self.lbl_run.setText(_translate("MainWindow", "RUN"))
 
-    def choose_file(self, Filepath):
-        file_name = QtWidgets.QFileDialog.getOpenFileName(None, "Choose File", "./", "All Files (*);;Text Files (*.txt)")
+    def choose_file(self):
+        file_name = QtWidgets.QFileDialog.getOpenFileName(None, "Choose File", "./",
+                                                          "All Files (*);;Text Files (*.txt)")
+        self.btn_IPL.setStyleSheet(Ui_MainWindow.gloabl_under_process_status)
+        # begin to load the file, all the data will be store in global_memory_tbale_data
+        f = open(file_name[0])
+        line = f.readline()
+        while line:
+            line = line.strip('\n')
+            strs = line.split(" ")
+            # strs[0] : address
+            # strs[1] : value or instruction
+            address = str(bin(int(strs[0],16)))
+            print(address + ":" +strs[1])
+            line = f.readline()
+        f.close()
+
+    # add a data into the row_No th of the table
+    def add_a_row_in_tb_by_row(self, data, row_No):
+        item = QtWidgets.QTableWidgetItem()
+        item.setText(data[0])
+        self.tb_memory_detail.setItem(row_No, 0, item)
+
+        item = QtWidgets.QTableWidgetItem()
+        item.setText(data[1])
+        self.tb_memory_detail.setItem(row_No, 1, item)
+
+        item = QtWidgets.QTableWidgetItem()
+        item.setText(data[2])
+        self.tb_memory_detail.setItem(row_No, 2, item)
+
+        self.tb_memory_detail.viewport().update()
+
+    # add a row data after the exist table
+    def add_a_row_into_tb(self, data):
+        row_count = int(self.tb_memory_detail.rowCount())
+        self.tb_memory_detail.insertRow(row_count)
+        item = QtWidgets.QTableWidgetItem()
+        item.setText(data[0])
+        self.tb_memory_detail.setItem(row_count, 0, item)
+
+        item = QtWidgets.QTableWidgetItem()
+        item.setText(data[1])
+        self.tb_memory_detail.setItem(row_count, 1, item)
+
+        item = QtWidgets.QTableWidgetItem()
+        item.setText(data[2])
+        self.tb_memory_detail.setItem(row_count, 2, item)
+
+        self.tb_memory_detail.viewport().update()
