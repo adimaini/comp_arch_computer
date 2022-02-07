@@ -16,13 +16,20 @@ Class project for Computer Architecture course with Morris Lancaster
 
 ```
 
-# Prerequisites for Mac
+# For the format of IPL.txt
+```text
+    0006 0001
+    0007 0002
+    0008 0004
+    0009 0005
+    000A 000B
+    000B LDR
+    000C STR
+    000D HALT
 
-If you are on Mac, then we need to run the code itself. The following dependencies are required before the code can be run: 
+Use 4 hexadecimal digits to represent 16-bit binary numbers
+So, for number value, the first 4 bit represents the address and the last 4 bit represents the number
+For the instruction, the first 4 bit represents the address, 
+and 'LDR ...' represents a instruction that needs to decode into binary value.
 
-* Operating System: Mac
-* Python version 3.9
-* Create a new virtual environment using “python3 -m venv group4_env”
-* Then run the virtual environment using “source group4_env/bin/activate”
-* Install required packages by running “pip install -r requirements.txt”
-* Then run the application using “python3 GUI.py”, which bring up the GUI of the applicatio*n
+```
