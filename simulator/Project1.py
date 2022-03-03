@@ -9,8 +9,15 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 #from instructions.instructions import instructions
 from memory.memory import Memory
+from utils import binaryUtils
+import time
+import os
 
 class Ui_MainWindow(object):
+    gloabl_under_process_status = "background:green"
+    gloabl_finish_process_status = "background:red"
+    # memory_table_data: the index represents the address and each element is a list with two element[binary, decimal]
+    #global_memory_table_data = ['0'] * 4096
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setWindowModality(QtCore.Qt.NonModal)
@@ -79,33 +86,33 @@ class Ui_MainWindow(object):
         self.btn_Run.setObjectName("btn_Run")
         self.btn_Run.clicked.connect(self.run)
 
-        # Halt
-        self.btn_Halt = QtWidgets.QPushButton(self.centralwidget)
-        self.btn_Halt.setGeometry(QtCore.QRect(617, 11, 93, 29))
+        self.lbl_run = QtWidgets.QLabel(self.centralwidget)
+        self.lbl_run.setGeometry(QtCore.QRect(620, 25, 31, 16))
         font = QtGui.QFont()
         font.setFamily("Consolas")
-        font.setPointSize(10)
-        self.btn_Halt.setFont(font)
-        self.btn_Halt.setObjectName("btn_Halt")
+        font.setPointSize(8)
+        self.lbl_run.setFont(font)
+        self.lbl_run.setStyleSheet(Ui_MainWindow.gloabl_finish_process_status)
+        self.lbl_run.setObjectName("lbl_run")
 
-        # For input store
-        self.le_store = QtWidgets.QLineEdit(self.centralwidget)
-        self.le_store.setGeometry(QtCore.QRect(810, 10, 191, 31))
+        #Halt
+        self.lbl_halt = QtWidgets.QLabel(self.centralwidget)
+        self.lbl_halt.setGeometry(QtCore.QRect(620, 4, 31, 16))
+        font = QtGui.QFont()
+        font.setFamily("Consolas")
+        font.setPointSize(8)
+        self.lbl_halt.setFont(font)
+        self.lbl_halt.setStyleSheet(Ui_MainWindow.gloabl_finish_process_status)
+        self.lbl_halt.setObjectName("lbl_halt")
+
+        self.btn_Reset = QtWidgets.QPushButton(self.centralwidget)
+        self.btn_Reset.setGeometry(QtCore.QRect(660, 11, 93, 29))
         font = QtGui.QFont()
         font.setFamily("Consolas")
         font.setPointSize(10)
-        self.le_store.setFont(font)
-        self.le_store.setStatusTip("")
-        self.le_store.setAccessibleDescription("")
-        self.le_store.setObjectName("le_store")
-        self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setGeometry(QtCore.QRect(740, 9, 81, 31))
-        font = QtGui.QFont()
-        font.setFamily("Consolas")
-        font.setPointSize(12)
-        self.label.setFont(font)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setObjectName("label")
+        self.btn_Reset.setFont(font)
+        self.btn_Reset.setObjectName("btn_Reset")
+        self.btn_Reset.clicked.connect(self.reset)
 
         # GPR0
         # <editor-fold desc="lbl_gpr0">
@@ -575,7 +582,7 @@ class Ui_MainWindow(object):
         self.tb_memory_detail.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tb_memory_detail.setTextElideMode(QtCore.Qt.ElideMiddle)
         self.tb_memory_detail.setShowGrid(True)
-        self.tb_memory_detail.setRowCount(50)
+        self.tb_memory_detail.setRowCount(2048)
         self.tb_memory_detail.setColumnCount(3)
         self.tb_memory_detail.setObjectName("tb_memory_detail")
         item = QtWidgets.QTableWidgetItem()
@@ -587,16 +594,10 @@ class Ui_MainWindow(object):
         item = QtWidgets.QTableWidgetItem()
         item.setTextAlignment(QtCore.Qt.AlignCenter)
         self.tb_memory_detail.setHorizontalHeaderItem(2, item)
-        self.tb_memory_detail.horizontalHeader().setCascadingSectionResizes(False)
-        self.tb_memory_detail.horizontalHeader().setDefaultSectionSize(196)
-        self.tb_memory_detail.horizontalHeader().setMinimumSectionSize(30)
-        self.tb_memory_detail.horizontalHeader().setSortIndicatorShown(False)
-        self.tb_memory_detail.horizontalHeader().setStretchLastSection(False)
-        self.tb_memory_detail.verticalHeader().setVisible(True)
-        self.tb_memory_detail.verticalHeader().setCascadingSectionResizes(False)
-        self.tb_memory_detail.verticalHeader().setDefaultSectionSize(36)
-        self.tb_memory_detail.verticalHeader().setSortIndicatorShown(False)
-        self.tb_memory_detail.verticalHeader().setStretchLastSection(False)
+
+        self.tb_memory_detail.setColumnWidth(0, 162)
+        self.tb_memory_detail.setColumnWidth(1, 190)
+        self.tb_memory_detail.setColumnWidth(2, 190)
 
         # Operation
         self.le_operation = QtWidgets.QLineEdit(self.centralwidget)
@@ -651,6 +652,13 @@ class Ui_MainWindow(object):
         self.le_address_input.setText("")
         self.le_address_input.setAlignment(QtCore.Qt.AlignCenter)
         self.le_address_input.setObjectName("le_address_input")
+
+        # bind the max length for those input value
+        self.le_operation.setMaxLength(6)
+        self.le_gpr_input.setMaxLength(2)
+        self.le_ixr_input.setMaxLength(2)
+        self.le_ir_input.setMaxLength(1)
+        self.le_address_input.setMaxLength(5)
 
         # <editor-fold desc="Operation... label">
         self.lbl_ix3_2 = QtWidgets.QLabel(self.centralwidget)
@@ -752,7 +760,6 @@ class Ui_MainWindow(object):
         self.btn_ST.raise_()
         self.btn_SS.raise_()
         self.btn_Run.raise_()
-        self.btn_Halt.raise_()
         self.line.raise_()
         self.lbl_gpr1.raise_()
         self.lbl_gpr2.raise_()
@@ -799,8 +806,9 @@ class Ui_MainWindow(object):
         self.lbl_ix3_5.raise_()
         self.lbl_ix3_6.raise_()
         self.line_5.raise_()
-        self.le_store.raise_()
-        self.label.raise_()
+        self.lbl_halt.raise_()
+        self.lbl_run.raise_()
+        self.btn_Reset.raise_()
         # </editor-fold>
 
         MainWindow.setCentralWidget(self.centralwidget)
@@ -815,7 +823,7 @@ class Ui_MainWindow(object):
 
         self.memory = Memory()
         #self.instructions = instructions()
-        self.pc = []
+        self.pc = self.le_pc.text()
         self.address = 8
         self.step = 0
         self.bin_instruction = ''
@@ -824,14 +832,13 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "CSCI-6461-Simulator"))
         self.btn_IPL.setText(_translate("MainWindow", "IPL"))
         self.btn_load.setText(_translate("MainWindow", "Load"))
         self.btn_Store.setText(_translate("MainWindow", "Store"))
         self.btn_ST.setText(_translate("MainWindow", "St++"))
         self.btn_SS.setText(_translate("MainWindow", "SingleStep"))
         self.btn_Run.setText(_translate("MainWindow", "Run"))
-        self.btn_Halt.setText(_translate("MainWindow", "Halt"))
         self.lbl_gpr0.setText(_translate("MainWindow", "GPR0"))
         self.btn_load_gpr0.setText(_translate("MainWindow", "LD"))
         self.lbl_pc.setText(_translate("MainWindow", " PC"))
@@ -870,14 +877,68 @@ class Ui_MainWindow(object):
         self.lbl_ix3_4.setText(_translate("MainWindow", "IXR"))
         self.lbl_ix3_5.setText(_translate("MainWindow", "I"))
         self.lbl_ix3_6.setText(_translate("MainWindow", "Address"))
-        self.label.setText(_translate("MainWindow", "Input:"))
-
-
-
-
+        self.lbl_halt.setText(_translate("MainWindow", "HALT"))
+        self.lbl_run.setText(_translate("MainWindow", "RUN"))
+        self.btn_Reset.setText(_translate("MainWindow", "Reset"))
 
     def choose_file(self, Filepath):
-        file_name = QtWidgets.QFileDialog.getOpenFileName(None, "Choose File", "./", "All Files (*);;Text Files (*.txt)")
+        list = self.memory.memory_data
+        file_name = QtWidgets.QFileDialog.getOpenFileName(None, "Choose File", "./",
+                                                          "All Files (*);;Text Files (*.txt)")
+
+        if file_name[0] == '':
+            return
+
+        if os.path.splitext(file_name[0])[-1] != '.txt':
+            self.messageDialog("Open File Error", "Please choose the .txt file!")
+            return
+
+        # begin to load the file, all the data will be store in global_memory_tbale_data
+        f = open(file_name[0])
+        line = f.readline()
+        while line:
+            line = line.strip('\n')
+            strs = line.split("\t")
+            address_bin_str = binaryUtils.hex_to_bin(strs[0])
+            value_bin_str = binaryUtils.hex_to_bin(strs[1])
+
+            idx = int(address_bin_str, 2)
+            list[idx].value = int(value_bin_str, 2)
+
+            line = f.readline()
+        f.close()
+
+        # write into table
+        for i in range(0, len(list)):
+            if list[i].value == None:
+                list[i].value = 0
+            self.add_a_row_in_tb_by_row(data=[binaryUtils.to_binary_with_length(i, 12), binaryUtils.to_binary_with_length(list[i].value,16), int(list[i].value)], row_No=i)
+        self.tb_memory_detail.viewport().update()
+
+    def reset(self):
+        self.lbl_halt.setStyleSheet(Ui_MainWindow.gloabl_finish_process_status)
+        self.lbl_run.setStyleSheet(Ui_MainWindow.gloabl_finish_process_status)
+        str = '0'
+        self.le_gpr0.setText(str*16)
+        self.le_gpr1.setText(str*16)
+        self.le_gpr2.setText(str*16)
+        self.le_gpr3.setText(str*16)
+        self.le_ix1.setText(str*16)
+        self.le_ix2.setText(str*16)
+        self.le_ix3.setText(str*16)
+        self.le_pc.setText(str*12)
+        self.le_mar.setText(str*12)
+        self.le_mbr.setText(str*16)
+        self.le_ir.setText(str * 16)
+        self.le_fr0.setText(str*16)
+        self.le_fr1.setText(str*16)
+        self.le_cc.setText(str*4)
+        self.le_mfr.setText(str * 4)
+        self.le_operation.setText((str*6))
+        self.le_gpr_input.setText((str * 2))
+        self.le_ixr_input.setText((str * 2))
+        self.le_ir_input.setText((str * 1))
+        self.le_address_input.setText((str * 5))
 
     def get_input(self):
         OP = self.le_operation.text()
@@ -927,29 +988,33 @@ class Ui_MainWindow(object):
         code = self.get_input()
         self.le_ix3.setText(code)
 
+    # store function
     def store(self):
         address = self.le_mar.text()
-        if int(address,2) >= 1024:
-            self.pc.append(address)
         value = self.le_mbr.text()
+        row_No = int(address, 2)
         self.memory.set(address, value, True)
-        self.tb_memory_detail.setItem(self.row, 0, QtWidgets.QTableWidgetItem(address))
-        self.tb_memory_detail.setItem(self.row, 1, QtWidgets.QTableWidgetItem(value))
-        self.tb_memory_detail.setItem(self.row, 2, QtWidgets.QTableWidgetItem(str(int(value,2))))
+        self.tb_memory_detail.setItem(row_No, 0, QtWidgets.QTableWidgetItem(address))
+        self.tb_memory_detail.setItem(row_No, 1, QtWidgets.QTableWidgetItem(value))
+        self.tb_memory_detail.setItem(row_No, 2, QtWidgets.QTableWidgetItem(str(int(value,2))))
         self.row += 1
 
+    # store++ function
     def store_plus(self):
         address = self.le_mar.text()
         value = self.le_mbr.text()
+        row_No = int(address, 2)
         self.memory.set(address, value, True)
-        self.tb_memory_detail.setItem(self.row, 0, QtWidgets.QTableWidgetItem(address))
-        self.tb_memory_detail.setItem(self.row, 1, QtWidgets.QTableWidgetItem(value))
-        self.tb_memory_detail.setItem(self.row, 2, QtWidgets.QTableWidgetItem(str(int(value,2))))
+        self.tb_memory_detail.setItem(row_No, 0, QtWidgets.QTableWidgetItem(address))
+        self.tb_memory_detail.setItem(row_No, 1, QtWidgets.QTableWidgetItem(value))
+        self.tb_memory_detail.setItem(row_No, 2, QtWidgets.QTableWidgetItem(str(int(value,2))))
         address = bin(int(address,2)+1).replace('0b', '')
         address_new = '0' * (12 - len(address)) + address
         self.le_mar.setText(address_new)
-        self.row += 1
+        #self.row += 1
+        self.tb_memory_detail.viewport().update()
 
+    # load function
     def load(self):
         address = self.le_mar.text()
         value = self.memory.get(address, True)
@@ -957,58 +1022,116 @@ class Ui_MainWindow(object):
         value = '0' * (16 - len(value_str))+value_str
         self.le_mbr.setText(str(value))
 
+    def messageDialog(self, title, message):
+        msg_box = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Warning, title, message)
+        msg_box.exec_()
+
+    # Single step function
     def single_step(self):
-        address = self.pc[0]
-        self.pc.pop(0)
+        if self.le_pc.text() == '':
+            msg_box = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Warning, 'Warning', 'You should reset the machine before single_step or run.')
+            msg_box.exec_()
+            return
+        self.lbl_halt.setStyleSheet(Ui_MainWindow.gloabl_finish_process_status)
+        self.lbl_run.setStyleSheet(Ui_MainWindow.gloabl_under_process_status)
+
+        address = self.le_pc.text()
         instruction = self.memory.get(address, True)
+        print('a',instruction)
+
+        #set the value of IR
+        self.le_ir.setText(str(binaryUtils.to_binary_value(instruction)))
+
         r = bin(instruction).replace('0b', '')
         instruction = '0' * (16 - len(r)) + r
-        if int(instruction[0:6],2) == 1:
-            self.LDR(instruction)
-        elif int(instruction[0:6],2) == 2:
-            self.STR(instruction)
-        elif int(instruction[0:6],2) == 3:
-            self.LDA(instruction)
-        elif int(instruction[0:6],2) == 41:
-            self.LDX(instruction)
-        elif int(instruction[0:6],2) == 42:
-            self.STX(instruction)
+        print('b',instruction)
+        print(oct(int(instruction[0:9],2))[2:])
+        print(oct(int(instruction[0:6],2))[2:])
 
+        if oct(int(instruction[0:9],2))[2:] == '0':
+            print('stop')
+            return self.HLT()
+        elif oct(int(instruction[0:6],2))[2:] == '1':
+            print('ldr')
+            self.LDR(instruction)
+        elif oct(int(instruction[0:6],2))[2:] == '2':
+            self.STR(instruction)
+        elif oct(int(instruction[0:6],2))[2:] == '3':
+            self.LDA(instruction)
+        elif oct(int(instruction[0:6],2))[2:] == '41':
+            self.LDX(instruction)
+        elif oct(int(instruction[0:6],2))[2:] == '42':
+            self.STX(instruction)
+        address = int(address,2)+1
+        address = bin(address)[2:]
+        address = '0' * (12 - len(address)) + address
+        self.le_pc.setText(address)
+
+    # run function
     def run(self):
-        l = len(self.pc)
-        for i in range(l):
+        self.lbl_run.setStyleSheet(Ui_MainWindow.gloabl_under_process_status)
+        while(oct(int(binaryUtils.to_binary_with_length(self.memory.get(self.le_pc.text(), True),16)[0:9],2))[2:] != '0'):
             self.single_step()
 
-    def idir_ad(self, ix_code, value):
-        r = bin(value).replace('0b', '')
-        ix = '0' * (16 - len(r)) + r
-        if ix_code == '01':
-            self.le_ix1.setText(ix)
-        elif ix_code == '02':
-            self.le_ix2.setText(ix)
-        else:
-            self.le_ix3.setText(ix)
-        value = self.memory.get(str(value), False)
-        return value
+        self.messageDialog("Halt", "Machine Stopped!")
+        self.reset()
+        #self.lbl_run.setStyleSheet(Ui_MainWindow.gloabl_finish_process_status)
+        self.lbl_halt.setStyleSheet(Ui_MainWindow.gloabl_under_process_status)
 
-    def LDR(self, instruction):
-        address = int(instruction[11:],2)
-        value = self.memory.get(str(address), False)
-        if instruction[10] == '1':
-            value = self.idir_ad(instruction[8:10], value)
-        r = bin(value).replace('0b', '')
-        value = '0' * (16 - len(r)) + r
-        if instruction[6:8] == '00':
+    def set_memory(self, address, value):
+        row = int(address, 2)
+        self.tb_memory_detail.item(row, 0).setText(address)
+        self.tb_memory_detail.item(row, 1).setText(value)
+        self.tb_memory_detail.item(row, 2).setText(str(int(value, 2)))
+
+    def set_mar_mbr(self, address, value):
+        self.le_mar.setText(address)
+        self.le_mbr.setText(value)
+
+    def ix_ad(self, ix_code):
+        if ix_code == '00':
+            ix_add = '0'
+        elif ix_code == '01':
+            ix_add = self.le_ix1.text()
+        elif ix_code == '10':
+            ix_add = self.le_ix2.text()
+        else:
+            ix_add = self.le_ix3.text()
+        return int(ix_add,2)
+
+    def regisger(self,R, value):
+        if R == '00':
             self.le_gpr0.setText(value)
-        elif instruction[6:8] == '01':
+        elif R == '01':
             self.le_gpr1.setText(value)
-        elif instruction[6:8] == '10':
+        elif R == '10':
             self.le_gpr2.setText(value)
         else:
             self.le_gpr3.setText(value)
 
+    # LDR function
+    def LDR(self, instruction):
+        address = int(instruction[11:],2)
+        ix = self.ix_ad(instruction[8:10])
+        address = address + ix
+        if instruction[10] == '1':
+            address = self.memory.get(str(address), False)
+        value = self.memory.get(str(address), False)
+        r = bin(value).replace('0b', '')
+        value = '0' * (16 - len(r)) + r
+        print(value)
+        self.regisger(instruction[6:8], value)
+        address = binaryUtils.to_binary_with_length(address, 12)
+        self.set_mar_mbr(address, value)
+
+    # STR function
     def STR(self, instruction):
-        address = instruction[11:]
+        address = int(instruction[11:], 2)
+        ix = self.ix_ad(instruction[8:10])
+        address = address + ix
+        if instruction[10] == '1':
+            address = self.memory.get(str(address), False)
+        address = bin(address)[2:]
         address = '0' * (12 - len(address)) + address
         if instruction[6:8] == '00':
             value = self.le_gpr0.text()
@@ -1019,21 +1142,27 @@ class Ui_MainWindow(object):
         else:
             value = self.le_gpr3.text()
         self.memory.set(address, value, True)
-        self.tb_memory_detail.setItem(self.row, 0, QtWidgets.QTableWidgetItem(address))
-        self.tb_memory_detail.setItem(self.row, 1, QtWidgets.QTableWidgetItem(value))
-        self.tb_memory_detail.setItem(self.row, 2, QtWidgets.QTableWidgetItem(str(int(value, 2))))
-        self.row += 1
+        self.set_memory(address, value)
+        self.set_mar_mbr(address, value)
 
+    # LDA function
     def LDA(self, instruction):
-        return
+        address = int(instruction[11:], 2)
+        ix = self.ix_ad(instruction[8:10])
+        address = address + ix
+        if instruction[10] == '1':
+            address = self.memory.get(str(address), False)
+        r = bin(address)[2:]
+        address = '0' * (16 - len(r)) + r
+        self.regisger(instruction[6:8], address)
+        self.set_mar_mbr(address[4:], address)
 
+    # LDX function
     def LDX(self, instruction):
         address = int(instruction[11:],2)
-        value = self.memory.get(str(address), False)
-        '''
         if instruction[10] == '1':
-            value = self.idir_ad(instruction[8:10], value)
-        '''
+            address = self.memory.get(str(address), False)
+        value = self.memory.get(str(address), False)
         r = bin(value).replace('0b', '')
         value = '0' * (16 - len(r)) + r
         if instruction[8:10] == '01':
@@ -1042,20 +1171,34 @@ class Ui_MainWindow(object):
             self.le_ix2.setText(value)
         elif instruction[8:10] == '11':
             self.le_ix3.setText(value)
+        self.set_mar_mbr(binaryUtils.to_binary_with_length(address, 12), value)
 
+    #STX function
     def STX(self, instruction):
-        address = instruction[11:]
+        address = int(instruction[11:], 2)
+        if instruction[10] == '1':
+            address = self.memory.get(str(address), False)
+        address = bin(address)[2:]
         address = '0' * (12 - len(address)) + address
-
         if instruction[8:10] == '01':
             value = self.le_ix1.text()
         elif instruction[8:10] == '10':
             value = self.le_ix2.text()
         elif instruction[8:10] == '11':
             value = self.le_ix3.text()
-
         self.memory.set(address, value, True)
-        self.tb_memory_detail.setItem(self.row, 0, QtWidgets.QTableWidgetItem(address))
-        self.tb_memory_detail.setItem(self.row, 1, QtWidgets.QTableWidgetItem(value))
-        self.tb_memory_detail.setItem(self.row, 2, QtWidgets.QTableWidgetItem(str(int(value, 2))))
-        self.row += 1
+        self.set_memory(address, value)
+        self.set_mar_mbr(address, value)
+
+    #Halt function
+    def HLT(self):
+        print('stop')
+        self.reset()
+        self.lbl_halt.setStyleSheet(Ui_MainWindow.gloabl_under_process_status)
+        self.messageDialog("Halt", "Machine stopped!")
+
+    def add_a_row_in_tb_by_row(self, row_No, data):
+        for i in range(0, 3):
+            item = QtWidgets.QTableWidgetItem()
+            item.setText(str(data[i]))
+            self.tb_memory_detail.setItem(row_No, i, item)

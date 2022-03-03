@@ -1,19 +1,16 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'Project1.ui'
-#
-# Created by: PyQt5 UI code generator 5.9.2
-#
-# WARNING! All changes made in this file will be lost!
 from PyQt5 import QtCore, QtGui, QtWidgets
 from utils import binaryUtils
+import CPU.control_unit as cu
+from memory.memory import Memory
+
 
 class Ui_MainWindow(object):
     gloabl_under_process_status = "background:green"
     gloabl_finish_process_status = "background:red"
 
-    # memory_table_data: the index represents the address and each element is a list with two element[binary, decimal]
-    global_memory_table_data = ['0'] * 4096
+    def __init__(self):
+        self.controlUnit = cu.ControlUnit()
+        self.memory = Memory()
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -97,6 +94,14 @@ class Ui_MainWindow(object):
         self.lbl_halt.setFont(font)
         self.lbl_halt.setStyleSheet(Ui_MainWindow.gloabl_finish_process_status)
         self.lbl_halt.setObjectName("lbl_halt")
+
+        self.btn_Reset = QtWidgets.QPushButton(self.centralwidget)
+        self.btn_Reset.setGeometry(QtCore.QRect(660, 11, 93, 29))
+        font = QtGui.QFont()
+        font.setFamily("Consolas")
+        font.setPointSize(10)
+        self.btn_Reset.setFont(font)
+        self.btn_Reset.setObjectName("btn_Reset")
 
         # GPR0
         # <editor-fold desc="lbl_gpr0">
@@ -560,7 +565,6 @@ class Ui_MainWindow(object):
         font.setFamily("Consolas")
         font.setPointSize(10)
         self.tb_memory_detail.setFont(font)
-        # self.tb_memory_detail.setTabletTracking(True)
         self.tb_memory_detail.setAutoFillBackground(False)
         self.tb_memory_detail.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.tb_memory_detail.setLineWidth(1)
@@ -569,7 +573,7 @@ class Ui_MainWindow(object):
         self.tb_memory_detail.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.tb_memory_detail.setDragEnabled(False)
         self.tb_memory_detail.setAlternatingRowColors(True)
-        # self.tb_memory_detail.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.tb_memory_detail.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tb_memory_detail.setTextElideMode(QtCore.Qt.ElideMiddle)
         self.tb_memory_detail.setShowGrid(True)
 
@@ -801,6 +805,7 @@ class Ui_MainWindow(object):
         self.line_5.raise_()
         self.lbl_halt.raise_()
         self.lbl_run.raise_()
+        self.btn_Reset.raise_()
         # </editor-fold>
 
         MainWindow.setCentralWidget(self.centralwidget)
@@ -810,6 +815,22 @@ class Ui_MainWindow(object):
 
         # bind a function for button click
         self.btn_IPL.clicked.connect(self.choose_file)
+        self.btn_Store.clicked.connect(self.store)
+        self.btn_ST.clicked.connect(self.store_plus)
+        self.btn_SS.clicked.connect(self.single_step)
+        self.btn_Run.clicked.connect(self.run)
+
+        self.btn_load.clicked.connect(self.load)
+        self.btn_load_pc.clicked.connect(self.load_pc)
+        self.btn_load_mar.clicked.connect(self.load_mar)
+        self.btn_load_mbr.clicked.connect(self.load_mbr)
+        self.btn_load_gpr0.clicked.connect(self.load_gpr0)
+        self.btn_load_gpr1.clicked.connect(self.load_gpr1)
+        self.btn_load_gpr2.clicked.connect(self.load_gpr2)
+        self.btn_load_gpr3.clicked.connect(self.load_gpr3)
+        self.btn_load_ix1.clicked.connect(self.load_ix1)
+        self.btn_load_ix2.clicked.connect(self.load_ix2)
+        self.btn_load_ix3.clicked.connect(self.load_ix3)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -859,9 +880,11 @@ class Ui_MainWindow(object):
         self.lbl_ix3_6.setText(_translate("MainWindow", "Address"))
         self.lbl_halt.setText(_translate("MainWindow", "HALT"))
         self.lbl_run.setText(_translate("MainWindow", "RUN"))
+        self.btn_Reset.setText(_translate("MainWindow", "Reset"))
 
     def choose_file(self):
-        table_list = Ui_MainWindow.global_memory_table_data
+        #table_list = Ui_MainWindow.global_memory_table_data
+        list = self.memory.memory_data
         file_name = QtWidgets.QFileDialog.getOpenFileName(None, "Choose File", "./",
                                                           "All Files (*);;Text Files (*.txt)")
         # begin to load the file, all the data will be store in global_memory_tbale_data
@@ -870,32 +893,146 @@ class Ui_MainWindow(object):
         while line:
             line = line.strip('\n')
             strs = line.split("\t")
-            # strs[0] : address
-            # strs[1] : value or instruction
             address_bin_str = binaryUtils.hex_to_bin(strs[0])
-            value_bin_str = '0'
-
-            if (len(strs[1]) > 4):
-                # decode this instruction
-                print("instruction")
-            else:
-                value_bin_str = binaryUtils.hex_to_bin(strs[1])
+            value_bin_str = binaryUtils.hex_to_bin(strs[1])
 
             idx = int(address_bin_str, 2)
-            table_list[2 * idx] = value_bin_str
-            table_list[2 * idx + 1] = strs[1]
+            list[idx].value = value_bin_str
 
             line = f.readline()
         f.close()
 
-        # write into memory
-        for i in range(0, 2048):
-            self.add_a_row_in_tb_by_row(data=[binaryUtils.to_binary_with_length(i, 12), table_list[2*i], table_list[2*i+1]], row_No=i)
+        # write into table
+        for i in range(0, len(list)):
+            self.add_a_row_in_tb_by_row(data=[binaryUtils.to_binary_with_length(i, 12), list[i].value], row_No=i)
         self.tb_memory_detail.viewport().update()
 
     # add a data into the row_No th of the table
     def add_a_row_in_tb_by_row(self, row_No, data):
-        for i in range(0, 3):
+        for i in range(0, 2):
             item = QtWidgets.QTableWidgetItem()
-            item.setText(data[i])
+            item.setText(str(data[i]))
             self.tb_memory_detail.setItem(row_No, i, item)
+
+    def get_input(self):
+        OP = self.le_operation.text()
+        R = self.le_gpr_input.text()
+        IX = self.le_ixr_input.text()
+        I = self.le_ir_input.text()
+        Address = self.le_address_input.text()
+        return OP + R + IX + I + Address
+
+    #<editor-fold desc="load_xx">
+    def load_pc(self):
+        code = self.get_input()
+        self.le_pc.setText(code[4:])
+
+    def load_mar(self):
+        code = self.get_input()
+        self.le_mar.setText(code[4:])
+
+    def load_mbr(self):
+        code = self.get_input()
+        self.le_mbr.setText(code)
+
+    def load_gpr0(self):
+        code = self.get_input()
+        self.le_gpr0.setText(code)
+
+    def load_gpr1(self):
+        code = self.get_input()
+        self.le_gpr1.setText(code)
+
+    def load_gpr2(self):
+        code = self.get_input()
+        self.le_gpr2.setText(code)
+
+    def load_gpr3(self):
+        code = self.get_input()
+        self.le_gpr3.setText(code)
+
+    def load_ix1(self):
+        code = self.get_input()
+        self.le_ix1.setText(code)
+
+    def load_ix2(self):
+        code = self.get_input()
+        self.le_ix2.setText(code)
+
+    def load_ix3(self):
+        code = self.get_input()
+        self.le_ix3.setText(code)
+    #</editor-fold>
+
+    def load(self):
+        addr = self.le_mar.text()
+        value = self.memory.memory_data[int(addr, 2)].value
+        self.le_mbr.setText(str(value))
+
+    def store(self):
+        address = self.le_mar.text()
+        if int(address, 2) >= 1024:
+            self.pc.append(address)
+        value = self.le_mbr.text()
+
+        idx = int(address, 2)
+        self.memory.memory_data[idx].value = value
+
+        # updata table
+        self.tb_memory_detail.setItem(idx, 0, QtWidgets.QTableWidgetItem(address))
+        self.tb_memory_detail.setItem(idx, 1, QtWidgets.QTableWidgetItem(value))
+
+    def store_plus(self):
+        address = self.le_mar.text()
+        value = self.le_mbr.text()
+
+        idx = int(address, 2)
+        self.memory.memory_data[idx].value = value
+
+        self.tb_memory_detail.setItem(idx, 0, QtWidgets.QTableWidgetItem(address))
+        self.tb_memory_detail.setItem(idx, 1, QtWidgets.QTableWidgetItem(value))
+
+        address_new = binaryUtils.to_binary_with_length(idx+1, 12)
+        self.le_mar.setText(address_new)
+
+    def single_step(self):
+        flag = False
+        list =  self.memory.memory_data
+        address = self.le_pc.text()
+        idx = int(address, 2)
+        instrction = list[idx].value
+
+        self.controlUnit.decode(instrction)
+        self.le_ir.setText(instrction)
+        if(self.controlUnit.opcode == '000000'):
+            flag = True
+
+        map = self.controlUnit.execute(self.memory)
+        # update the value of register
+        self.le_mar.setText(map['MAR'])
+        self.le_mbr.setText(map['MBR'])
+        self.le_gpr0.setText(map['R0'])
+        self.le_gpr1.setText(map['R1'])
+        self.le_gpr2.setText(map['R2'])
+        self.le_gpr3.setText(map['R3'])
+        self.le_ix1.setText(map['X1'])
+        self.le_ix2.setText(map['X2'])
+        self.le_ix3.setText(map['X3'])
+
+        # PC + 1
+        if(flag == 0):
+            print(idx)
+            address_new = binaryUtils.to_binary_with_length(idx + 1, 12)
+            self.le_pc.setText(address_new)
+        else:
+            self.le_pc.setText('0')
+        return flag
+
+    def run(self):
+        self.lbl_run.setText(Ui_MainWindow.gloabl_under_process_status)
+
+        while(True):
+            if(self.single_step() == 1):
+                self.lbl_halt.setStyleSheet(Ui_MainWindow.gloabl_under_process_status)
+                break;
+        self.lbl_run.setStyleSheet(Ui_MainWindow.gloabl_finish_process_status)

@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow
-from simulator import GUI
+import GUI
 
 if __name__ == '__main__':
     # 创建QApplication类的实例
