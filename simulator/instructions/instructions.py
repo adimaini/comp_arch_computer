@@ -1,15 +1,15 @@
-from memory.memory import Memory
 from Project1 import Ui_MainWindow
 
-class instructions(Ui_MainWindow):
+
+class Instructions(Ui_MainWindow):
     def __init__(self):
         self.ins = {'LDR': 1, 'STR': 2, 'LDA': 3, 'LDX': 41, 'STX': 42}
-        #self.memory = Memory()
-        #self.ui = Ui_MainWindow()
+        # self.memory = Memory()
+        # self.ui = Ui_MainWindow()
         self
 
     def LDR(self, instruction, memory):
-        address = int(instruction[11:],2)
+        address = int(instruction[11:], 2)
         print(address)
         value = memory.get(str(address), False)
         print(value)
@@ -37,7 +37,6 @@ class instructions(Ui_MainWindow):
         else:
             self.ui.le_gpr3.setText(value)
 
-
     def STR(self):
 
         return
@@ -54,22 +53,15 @@ class instructions(Ui_MainWindow):
 
         return
 
-
-
     def load(self):
 
         instruction = self.OP + self.R + self.IX + self.I + self.Address
 
 
-
-
 if __name__ == '__main__':
-
     instruction = '0000011100011111'
 
-    instructions = instructions()
-    in_encoded,a = instructions.LDR(instruction)
+    instructions = Instructions()
+    in_encoded, a = instructions.LDR(instruction)
 
-    print(in_encoded,a)
-
-
+    print(in_encoded, a)

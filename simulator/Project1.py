@@ -7,13 +7,23 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-#from instructions.instructions import instructions
+from PyQt5.QtCore import QRect
+from PyQt5.QtWidgets import QLineEdit, QFrame, QLabel, QPlainTextEdit, QPushButton
+
+from log.stream import QPlainTextEditLogger
 from memory.memory import Memory
 from utils import binaryUtils
-import time
 import os
+import sys
+import logging
+
 
 class Ui_MainWindow(object):
+
+    def __init__(self):
+        #self.logger = loggerConfig.logger
+        self.memory = Memory()
+
     gloabl_under_process_status = "background:green"
     gloabl_finish_process_status = "background:red"
     # memory_table_data: the index represents the address and each element is a list with two element[binary, decimal]
@@ -708,6 +718,40 @@ class Ui_MainWindow(object):
         self.lbl_ix3_6.setObjectName("lbl_ix3_6")
         # </editor-fold>
 
+        self.le_inputWord = QLineEdit(self.centralwidget)
+        self.le_inputWord.setObjectName(u"le_inputWord")
+        self.le_inputWord.setGeometry(QRect(610, 50, 351, 31))
+
+        self.btn_inputWord = QPushButton(self.centralwidget)
+        self.btn_inputWord.setObjectName(u"btn_inputWord")
+        self.btn_inputWord.setGeometry(QRect(970, 50, 140, 30))
+        self.btn_inputWord.setFont(font)
+
+        self.btn_test_log = QPushButton(self.centralwidget)
+        self.btn_test_log.setObjectName(u"btn_test_log")
+        self.btn_test_log.setGeometry(QRect(1120, 50, 140, 30))
+        self.btn_test_log.setFont(font)
+
+        self.log_area = QPlainTextEditLogger(self.centralwidget)
+        self.log_area.setFormatter(logging.Formatter('%(asctime)s - %(name)-6s %(levelname)-4s: - %(message)s'))
+        # You can control the logging level
+        logging.getLogger().addHandler(self.log_area)
+        # You can control the logging level
+        logging.getLogger().setLevel(logging.DEBUG)
+
+        self.line_6 = QFrame(self.centralwidget)
+        self.line_6.setObjectName(u"line_6")
+        self.line_6.setGeometry(QRect(610, 80, 861, 16))
+        self.line_6.setFrameShape(QFrame.HLine)
+        self.line_6.setFrameShadow(QFrame.Sunken)
+
+        self.line_7 = QFrame(self.centralwidget)
+        self.line_7.setObjectName(u"line_7")
+        self.line_7.setGeometry(QRect(610, 470, 861, 16))
+        self.line_7.setFrameShape(QFrame.HLine)
+        self.line_7.setFrameShadow(QFrame.Sunken)
+
+
         # <editor-fold desc="line">
         self.line = QtWidgets.QFrame(self.centralwidget)
         self.line.setGeometry(QtCore.QRect(0, 40, 1920, 10))
@@ -809,6 +853,13 @@ class Ui_MainWindow(object):
         self.lbl_halt.raise_()
         self.lbl_run.raise_()
         self.btn_Reset.raise_()
+
+        self.le_inputWord.raise_()
+        self.btn_inputWord.raise_()
+        self.btn_test_log.raise_()
+        self.line_6.raise_()
+        #self.log_area.raise_()
+        self.line_7.raise_()
         # </editor-fold>
 
         MainWindow.setCentralWidget(self.centralwidget)
@@ -820,8 +871,9 @@ class Ui_MainWindow(object):
         self.btn_IPL.clicked.connect(self.choose_file)
         self.btn_Store.clicked.connect(self.store)
         self.btn_SS.clicked.connect(self.single_step)
+        self.btn_inputWord.clicked.connect(self.input_a_word)
+        self.btn_test_log.clicked.connect(self.log_test)
 
-        self.memory = Memory()
         #self.instructions = instructions()
         self.pc = self.le_pc.text()
         self.address = 8
@@ -880,6 +932,26 @@ class Ui_MainWindow(object):
         self.lbl_halt.setText(_translate("MainWindow", "HALT"))
         self.lbl_run.setText(_translate("MainWindow", "RUN"))
         self.btn_Reset.setText(_translate("MainWindow", "Reset"))
+        self.btn_inputWord.setText(_translate("MainWindow", "Input&&Exec"))
+        self.btn_test_log.setText(_translate("MainWindow", "Test Log"))
+
+    def log_test(self):
+        logging.info("info")
+        logging.debug("debug")
+        logging.error("error")
+        logging.warning("warning")
+        print('test')
+
+    def input_a_word(self):
+        word = self.le_inputWord.text()
+        if(len(word.strip()) == 0):
+            logging.error("Please input a word from inputArea")
+            return
+
+        logging.info("Get a word {%s} from inputArea" % word)
+        #decode
+
+
 
     def choose_file(self, Filepath):
         list = self.memory.memory_data
@@ -907,6 +979,7 @@ class Ui_MainWindow(object):
 
             line = f.readline()
         f.close()
+
 
         # write into table
         for i in range(0, len(list)):

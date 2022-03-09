@@ -1,1 +1,1 @@
-__all__ = ['binaryUtils']
+__all__ = ['binaryUtils', 'loggerConfig']

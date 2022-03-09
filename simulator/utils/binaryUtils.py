@@ -1,6 +1,6 @@
 # convert a decimal number to a length-bit binary string
 def to_binary_with_length(value, length):
-    print(value,length)
+    # print(value,length)
     bin_str = str(bin(value))[2:]
     res = '0' * (length - len(bin_str)) + bin_str
     return res

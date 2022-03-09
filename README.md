@@ -33,3 +33,20 @@ For the instruction, the first 4 bit represents the address,
 and 'LDR ...' represents a instruction that needs to decode into binary value.
 
 ```
+
+# For the Log
+
+The `test log` button is used to validate that the panel will show the log or not.
+
+In our code:
+
+```python
+logging.info("info")
+logging.debug("debug")
+logging.error("error")
+logging.warning("warning")
+
+# with some variables
+logger.info('address %s and value %s set' % (str(address), str(value)))
+```
+
