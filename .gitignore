@@ -5,4 +5,4 @@ src/simulator/memory/__pycache__/__init__.cpython-39.pyc
 .gitignore
 src/simulator/test_file.py
 simulator/.idea/*
-simulator/__pycache/*
+simulator/__pycache__/*
