@@ -1,5 +1,10 @@
 # convert a decimal number to a length-bit binary string
-def to_binary_with_length(value, length):
+def to_binary_with_length(value: int, length: int):
+    '''
+    :param value: int
+    :param length: int
+    :return:
+    '''
     # print(value,length)
     bin_str = str(bin(value))[2:]
     res = '0' * (length - len(bin_str)) + bin_str

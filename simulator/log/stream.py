@@ -1,7 +1,5 @@
-from PyQt5 import QtCore, QtGui
-from PyQt5.QtCore import QEventLoop, QTimer, QRect
+from PyQt5.QtCore import  QRect
 import logging
-import sys
 
 from PyQt5.QtWidgets import QPlainTextEdit
 
