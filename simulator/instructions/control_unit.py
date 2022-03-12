@@ -26,7 +26,7 @@ class ControlUnit:
         self.command_dict = {
             'LDR': 1, 'STR': 2, 'LDA': 3, 'LDX': 41, 'STX': 42,
             'JZ': 10, 'JNE': 11, 'JCC': 12, 'JMA': 13, 'JSR': 14, 'RFS': 15, 'SOB': 16, 'JGE': 17,
-            'MLT':20, 'DVD':21, 'TRR':22, 'AND': 23, 'ORR': 24, 'NOT': 25, 'SRC': 31, 'RRC': 32
+            'AMR': 4, 'SMR': 5, 'AIR': 6, 'SIR': 7, 'MLT':20, 'DVD':21, 'TRR':22, 'AND': 23, 'ORR': 24, 'NOT': 25, 'SRC': 31, 'RRC': 32
         }
 
     # decode a word: LDR,0,0,1,ADDRESS
@@ -45,7 +45,7 @@ class ControlUnit:
         number_func_dict = {
             '1': self.LDR, '2': self.STR, '3': self.LDA, '41': self.LDX, '42': self.STX,
             '10': self.JZ, '11': self.JNE, '12': self.JCC, '14': self.JSR, '15': self.RFS, '16': self.SOB, '17': self.JGE,
-            '20': self.MLT, '21': self.DVD, '22': self.TRR, '23': self.AND, '24': self.ORR, '25': self.NOT, '31': self.SRC, '32': self.RRC
+            '4': self.AMR, '5': self.SMR, '6': self.AIR, '7': self.SIR, '20': self.MLT, '21': self.DVD, '22': self.TRR, '23': self.AND, '24': self.ORR, '25': self.NOT, '31': self.SRC, '32': self.RRC
         }
 
         method = number_func_dict.get(self.opcode)
