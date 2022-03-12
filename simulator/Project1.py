@@ -944,7 +944,6 @@ class Ui_MainWindow(object):
         self.btn_test_log.setText(_translate("MainWindow", "Test Log"))
 
     def log_test(self):
-        #self.bus.emit_signal_mar("10")
         logging.info("info")
         logging.debug("debug")
         logging.error("error")
@@ -1039,8 +1038,17 @@ class Ui_MainWindow(object):
         f = open(file_name[0])
         line = f.readline()
         while line:
+            if line[0] == '#' or line == '\n':
+                line = f.readline()
+                continue
+
+            if line.find('#') != -1:
+                end_index = line.find('#')
+                line = line[0:end_index]
+
             line = line.strip('\n')
-            strs = line.split("\t")
+            line = line.strip(' ')
+            strs = line.split(" ")
             address_bin_str = binaryUtils.hex_to_bin(strs[0])
             value_bin_str = binaryUtils.hex_to_bin(strs[1])
 

@@ -2,6 +2,7 @@ import logging
 
 from simulator.utils import binaryUtils
 
+
 class ControlUnit:
 
     def __init__(self, memory, bus, registers):
@@ -11,7 +12,7 @@ class ControlUnit:
 
         self.opcode = 0
         self.r = 0
-        self.ix = 0
+        self.x = 0
         self.i = 0
         self.address = 0
         self.cc = 0
@@ -26,18 +27,20 @@ class ControlUnit:
         self.command_dict = {
             'LDR': 1, 'STR': 2, 'LDA': 3, 'LDX': 41, 'STX': 42,
             'JZ': 10, 'JNE': 11, 'JCC': 12, 'JMA': 13, 'JSR': 14, 'RFS': 15, 'SOB': 16, 'JGE': 17,
+            'MLT': 20, 'DVD': 21, 'TRR': 22, 'AND': 23, 'ORR': 24, 'NOT': 25, 'SRC': 31, 'RRC': 32,
             'AMR': 4, 'SMR': 5, 'AIR': 6, 'SIR': 7, 'MLT':20, 'DVD':21, 'TRR':22, 'AND': 23, 'ORR': 24, 'NOT': 25, 'SRC': 31, 'RRC': 32
         }
 
-    # decode a word: LDR,0,0,1,ADDRESS
+    # decode a word: LDR,0,0,1,ADDRESS,0
+    # decode a word: 0000010000000001
     def decodeAWord(self, word: str):
         if word.find(',') != -1:
             command = word.split(',')
             self.opcode = self.command_dict[command[0]]
             self.execute_function(command)
         else:
-            self.opcode = oct(int(word[0:6],2))[2:]
-            #self.opcode = int(word[0:6], 2)
+            self.opcode = oct(int(word[0:6], 2))[2:]
+            # self.opcode = int(word[0:6], 2)
             self.execute_function(word)
 
     # notify the function
@@ -50,13 +53,13 @@ class ControlUnit:
 
         method = number_func_dict.get(self.opcode)
         if method:
-            method(command) # execute the function
+            method(command)  # execute the function
         else:
             logging.error("Machine can't execute this instruction. Still need to improvement!")
             return
 
     def get_a_ir_str(self, opcode, r, x, i, address):
-        opcode_bin = binaryUtils.to_binary_with_length(int(opcode,8), 6)
+        opcode_bin = binaryUtils.to_binary_with_length(int(opcode, 8), 6)
         r_bin = binaryUtils.to_binary_with_length(r, 2)
         x_bin = binaryUtils.to_binary_with_length(x, 2)
         i_bin = binaryUtils.to_binary_with_length(i, 1)
@@ -174,13 +177,13 @@ class ControlUnit:
         logging.info("LDX: The {%s} will be executed." % ir_str)
         self.bus.emit_signal_ir(ir_str)
 
-        #self.address = self.address + int(self.registers["ix"][self.x], 2)
+        # self.address = self.address + int(self.registers["ix"][self.x], 2)
 
         if self.i == 1:
             self.address = self.memory.get(self.address, False)
 
         value = self.memory.get(self.address, False)
-        value = binaryUtils.to_binary_with_length(value,16)
+        value = binaryUtils.to_binary_with_length(value, 16)
         address_12 = binaryUtils.to_binary_with_length(self.address, 12)
 
         self.bus.emit_signal_mar(address_12)
@@ -204,7 +207,7 @@ class ControlUnit:
         logging.info("STX: The {%s} will be executed." % ir_str)
         self.bus.emit_signal_ir(ir_str)
 
-        #self.address = self.address + int(self.registers["ix"][self.x], 2)
+        # self.address = self.address + int(self.registers["ix"][self.x], 2)
         if self.i == 1:
             self.address = self.memory.get(self.address, False)
 
@@ -240,7 +243,7 @@ class ControlUnit:
         # set MAR
         address_12 = binaryUtils.to_binary_with_length(self.address, 12)
         self.bus.emit_signal_mar(address_12)
-        #self.bus.emit_signal_mbr(address_12)
+        # self.bus.emit_signal_mbr(address_12)
 
         gpr_value = self.registers["gpr"][self.r]
         if int(gpr_value, 2) == 0:
@@ -304,7 +307,7 @@ class ControlUnit:
         self.bus.emit_signal_cc(binaryUtils.to_binary_with_length(self.cc, 2))
         address_12 = binaryUtils.to_binary_with_length(self.address, 12)
         self.bus.emit_signal_mar(address_12)
-        #self.bus.emit_signal_mbr(address_12)
+        # self.bus.emit_signal_mbr(address_12)
 
         if int(self.cc, 2) == 1:
             logging.info("PC changes into EA(%i)" % self.address)
@@ -370,13 +373,11 @@ class ControlUnit:
             self.bus.emit_signal_pc(binaryUtils.to_binary_with_length(self.address, 12))
         else:
             pc_value = self.registers["pc"]
-            pc_value = int(pc_value, 2) + 1;
+            pc_value = int(pc_value, 2) + 1
             logging.info("PC plus 1")
             self.bus.emit_signal_pc(binaryUtils.to_binary_with_length(pc_value, 12))
 
-
     # Arithmetic and Logical Instructions:
-
     def AMR(self, instruction):
         if type(instruction) == list:
             self.r = int(instruction[1])
@@ -448,17 +449,19 @@ class ControlUnit:
             self.ry = int(instruction[8:10], 2)
         rx_bin = self.registers['gpr'][self.rx]
         ry_bin = self.registers['gpr'][self.ry]
-        rx_value = int(rx_bin,2)
+        rx_value = int(rx_bin, 2)
         ry_value = int(ry_bin, 2)
         product = rx_value * ry_value
+        if product > 2e32 - 1:
+            print('overflow')
         if product > 2**32-1:
             self.bus.emit_signal_cc('0001')
         else:
-            product_bin = binaryUtils.to_binary_with_length(product,32)
+            product_bin = binaryUtils.to_binary_with_length(product, 32)
             high_bits = product_bin[:16]
             low_bits = product_bin[16:]
             self.bus.emit_signal_gpr(str(self.rx), high_bits)
-            self.bus.emit_signal_gpr(str(self.rx+1), low_bits)
+            self.bus.emit_signal_gpr(str(self.rx + 1), low_bits)
 
     def DVD(self, instruction):
         if type(instruction) == list:
@@ -476,7 +479,7 @@ class ControlUnit:
         else:
             quotient = rx_value // ry_value
             remainder = rx_value % ry_value
-            quotient_bin = binaryUtils.to_binary_with_length(quotient,16)
+            quotient_bin = binaryUtils.to_binary_with_length(quotient, 16)
             remainder_bin = binaryUtils.to_binary_with_length(remainder, 16)
             self.bus.emit_signal_gpr(str(self.rx), quotient_bin)
             self.bus.emit_signal_gpr(str(self.rx + 1), remainder_bin)
@@ -509,9 +512,8 @@ class ControlUnit:
         rx_value = int(rx_bin, 2)
         ry_value = int(ry_bin, 2)
         res = rx_value & ry_value
-        res_bin = binaryUtils.to_binary_with_length(res,16)
+        res_bin = binaryUtils.to_binary_with_length(res, 16)
         self.bus.emit_signal_gpr(str(self.rx), res_bin)
-
 
     def ORR(self, instruction):
         if type(instruction) == list:
@@ -541,6 +543,8 @@ class ControlUnit:
         res_bin = binaryUtils.to_binary_with_length(res, 16)
         print(res_bin)
         self.bus.emit_signal_gpr(str(self.rx), res_bin)
+
+    # Arithmetic and Logical Instructions:
 
     def SRC(self, instruction):
         if type(instruction) == list:
@@ -603,9 +607,6 @@ class ControlUnit:
                 r_bin = r_bin[-self.count:] + r_bin[:-self.count]
             r_bin = s + r_bin
         self.bus.emit_signal_gpr(str(self.R), r_bin)
-
-
-
 
     # I/O Operations :
 
