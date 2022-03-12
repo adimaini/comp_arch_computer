@@ -1,6 +1,6 @@
 import logging
 
-from utils import binaryUtils
+from simulator.utils import binaryUtils
 
 class ControlUnit:
 
@@ -25,6 +25,7 @@ class ControlUnit:
         self.command_dict = {
             'LDR': 1, 'STR': 2, 'LDA': 3, 'LDX': 41, 'STX': 42,
             'JZ': 10, 'JNE': 11, 'JCC': 12, 'JMA': 13, 'JSR': 14, 'RFS': 15, 'SOB': 16, 'JGE': 17,
+            'MLT':20, 'DVD':21, 'TRR':22, 'AND': 23, 'ORR': 24, 'NOT': 25, 'SRC': 31, 'RRC': 32
         }
 
     # decode a word: LDR,0,0,1,ADDRESS
@@ -34,14 +35,16 @@ class ControlUnit:
             self.opcode = self.command_dict[command[0]]
             self.execute_function(command)
         else:
-            self.opcode = int(word[0:6], 2)
+            self.opcode = oct(int(word[0:6],2))[2:]
+            #self.opcode = int(word[0:6], 2)
             self.execute_function(word)
 
     # notify the function
     def execute_function(self, command):
         number_func_dict = {
-            1: self.LDR, 2: self.STR, 3: self.LDA, 41: self.LDX, 42: self.STX,
-            10: self.JZ, 11: self.JNE, 12: self.JCC, 13: self.JSR, 14: self.RFS, 15: self.SOB, 16: self.JGE
+            '1': self.LDR, '2': self.STR, '3': self.LDA, '41': self.LDX, '42': self.STX,
+            '10': self.JZ, '11': self.JNE, '12': self.JCC, '14': self.JSR, '15': self.RFS, '16': self.SOB, '17': self.JGE,
+            '20': self.MLT, '21': self.DVD, '22': self.TRR, '23': self.AND, '24': self.ORR, '25': self.NOT, '31': self.SRC, '32': self.RRC
         }
 
         method = number_func_dict.get(self.opcode)
@@ -52,7 +55,7 @@ class ControlUnit:
             return
 
     def get_a_ir_str(self, opcode, r, x, i, address):
-        opcode_bin = binaryUtils.to_binary_with_length(opcode, 6)
+        opcode_bin = binaryUtils.to_binary_with_length(int(opcode,8), 6)
         r_bin = binaryUtils.to_binary_with_length(r, 2)
         x_bin = binaryUtils.to_binary_with_length(x, 2)
         i_bin = binaryUtils.to_binary_with_length(i, 1)
@@ -97,6 +100,8 @@ class ControlUnit:
         value = binaryUtils.to_binary_with_length(value, 16)
         logging.info("The value {%s} will be stored in GPR%i" % (value, self.r))
         self.bus.emit_signal_mbr(value)
+        print(self.r)
+        print(str(self.r))
         self.bus.emit_signal_gpr(str(self.r), value)
 
     def STR(self, instruction):
@@ -368,7 +373,175 @@ class ControlUnit:
             logging.info("PC plus 1")
             self.bus.emit_signal_pc(binaryUtils.to_binary_with_length(pc_value, 12))
 
+
+    def MLT(self, instruction):
+        if type(instruction) == list:
+            self.rx = int(instruction[1])
+            self.ry = int(instruction[2])
+        else:
+            self.rx = int(instruction[6:8], 2)
+            self.ry = int(instruction[8:10], 2)
+        rx_bin = self.registers['gpr'][self.rx]
+        ry_bin = self.registers['gpr'][self.ry]
+        rx_value = int(rx_bin,2)
+        ry_value = int(ry_bin, 2)
+        product = rx_value * ry_value
+        if product > 2e32-1:
+            print('overflow')
+        else:
+            product_bin = binaryUtils.to_binary_with_length(product,32)
+            high_bits = product_bin[:16]
+            low_bits = product_bin[16:]
+            self.bus.emit_signal_gpr(str(self.rx), high_bits)
+            self.bus.emit_signal_gpr(str(self.rx+1), low_bits)
+
+    def DVD(self, instruction):
+        if type(instruction) == list:
+            self.rx = int(instruction[1])
+            self.ry = int(instruction[2])
+        else:
+            self.rx = int(instruction[6:8], 2)
+            self.ry = int(instruction[8:10], 2)
+        rx_bin = self.registers['gpr'][self.rx]
+        ry_bin = self.registers['gpr'][self.ry]
+        rx_value = int(rx_bin, 2)
+        ry_value = int(ry_bin, 2)
+        if ry_value == 0:
+            print('DIVZERO')
+        else:
+            quotient = rx_value // ry_value
+            remainder = rx_value % ry_value
+            quotient_bin = binaryUtils.to_binary_with_length(quotient,16)
+            remainder_bin = binaryUtils.to_binary_with_length(remainder, 16)
+            self.bus.emit_signal_gpr(str(self.rx), quotient_bin)
+            self.bus.emit_signal_gpr(str(self.rx + 1), remainder_bin)
+
+    def TRR(self, instruction):
+        if type(instruction) == list:
+            self.rx = int(instruction[1])
+            self.ry = int(instruction[2])
+        else:
+            self.rx = int(instruction[6:8], 2)
+            self.ry = int(instruction[8:10], 2)
+        rx_bin = self.registers['gpr'][self.rx]
+        ry_bin = self.registers['gpr'][self.ry]
+        rx_value = int(rx_bin, 2)
+        ry_value = int(ry_bin, 2)
+        if rx_value == ry_value:
+            self.bus.emit_signal_cc('0001')
+        else:
+            self.bus.emit_signal_cc('0000')
+
+    def AND(self, instruction):
+        if type(instruction) == list:
+            self.rx = int(instruction[1])
+            self.ry = int(instruction[2])
+        else:
+            self.rx = int(instruction[6:8], 2)
+            self.ry = int(instruction[8:10], 2)
+        rx_bin = self.registers['gpr'][self.rx]
+        ry_bin = self.registers['gpr'][self.ry]
+        rx_value = int(rx_bin, 2)
+        ry_value = int(ry_bin, 2)
+        res = rx_value & ry_value
+        res_bin = binaryUtils.to_binary_with_length(res,16)
+        self.bus.emit_signal_gpr(str(self.rx), res_bin)
+
+
+    def ORR(self, instruction):
+        if type(instruction) == list:
+            self.rx = int(instruction[1])
+            self.ry = int(instruction[2])
+        else:
+            self.rx = int(instruction[6:8], 2)
+            self.ry = int(instruction[8:10], 2)
+        rx_bin = self.registers['gpr'][self.rx]
+        ry_bin = self.registers['gpr'][self.ry]
+        rx_value = int(rx_bin, 2)
+        ry_value = int(ry_bin, 2)
+        res = rx_value | ry_value
+        res_bin = binaryUtils.to_binary_with_length(res, 16)
+        self.bus.emit_signal_gpr(str(self.rx), res_bin)
+
+    def NOT(self, instruction):
+        if type(instruction) == list:
+            self.rx = int(instruction[1])
+        else:
+            self.rx = int(instruction[6:8], 2)
+        rx_bin = self.registers['gpr'][self.rx]
+        rx_value = int(rx_bin, 2)
+        print(rx_value)
+        res = ~rx_value
+        print(res)
+        res_bin = binaryUtils.to_binary_with_length(res, 16)
+        print(res_bin)
+        self.bus.emit_signal_gpr(str(self.rx), res_bin)
+
+
     # Arithmetic and Logical Instructions:
+
+    def SRC(self, instruction):
+        if type(instruction) == list:
+            self.R = int(instruction[1])
+            self.count = int(instruction[2])
+            self.LR = int(instruction[3])
+            self.AL = int(instruction[4])
+        else:
+            self.R = int(instruction[6:8], 2)
+            self.count = int(instruction[12:], 2)
+            self.LR = int(instruction[9], 2)
+            self.AL = int(instruction[8], 2)
+
+        r_bin = self.registers['gpr'][self.R]
+        if self.AL == 1:
+            if self.LR == 1:
+                r_bin = r_bin[self.count:] + '0' * self.count
+            else:
+                r_bin = '0' * self.count + r_bin[:-self.count]
+        else:
+            s = r_bin[0]
+            r_bin = r_bin[1:]
+            if s == '1':
+                a = '1'
+            else:
+                a = '0'
+            if self.LR == 1:
+                r_bin = r_bin[self.count:] + '0' * self.count
+            else:
+                r_bin = a * self.count + r_bin[:-self.count]
+            r_bin = s + r_bin
+        self.bus.emit_signal_gpr(str(self.R), r_bin)
+
+    def RRC(self, instruction):
+        if type(instruction) == list:
+            self.R = int(instruction[1])
+            self.count = int(instruction[2])
+            self.LR = int(instruction[3])
+            self.AL = int(instruction[4])
+        else:
+            self.R = int(instruction[6:8], 2)
+            self.count = int(instruction[12:], 2)
+            self.LR = int(instruction[9], 2)
+            self.AL = int(instruction[8], 2)
+
+        r_bin = self.registers['gpr'][self.R]
+        if self.AL == 1:
+            if self.LR == 1:
+                r_bin = r_bin[self.count:] + r_bin[:self.count]
+            else:
+                r_bin = r_bin[-self.count:] + r_bin[:-self.count]
+        else:
+            s = r_bin[0]
+            r_bin = r_bin[1:]
+            if self.LR == 1:
+                r_bin = r_bin[self.count:] + r_bin[:self.count]
+            else:
+                r_bin = r_bin[-self.count:] + r_bin[:-self.count]
+            r_bin = s + r_bin
+        self.bus.emit_signal_gpr(str(self.R), r_bin)
+
+
+
 
     # I/O Operations :
 
