@@ -22,6 +22,7 @@ class ControlUnit:
         self.AL = 0
         self.dev_id = 0
         self.trapCode = 0
+        self.immed = 0
         self.command_dict = {
             'LDR': 1, 'STR': 2, 'LDA': 3, 'LDX': 41, 'STX': 42,
             'JZ': 10, 'JNE': 11, 'JCC': 12, 'JMA': 13, 'JSR': 14, 'RFS': 15, 'SOB': 16, 'JGE': 17,
@@ -374,6 +375,70 @@ class ControlUnit:
             self.bus.emit_signal_pc(binaryUtils.to_binary_with_length(pc_value, 12))
 
 
+    # Arithmetic and Logical Instructions:
+
+    def AMR(self, instruction):
+        if type(instruction) == list:
+            self.r = int(instruction[1])
+            self.x = int(instruction[2])
+            self.address = int(instruction[3])
+            self.i = int(instruction[4])
+        else:
+            self.r = int(instruction[6:8], 2)
+            self.x = int(instruction[8:10], 2)
+            self.i = int(instruction[10:11], 2)
+            self.address = int(instruction[11:], 2)
+        self.get_computed_address()
+        value = self.memory.get(self.address, False)
+        r_value = int(self.registers['gpr'][self.r],2)
+        value = r_value + value
+        value = binaryUtils.to_binary_with_length(value, 16)
+        self.bus.emit_signal_gpr(str(self.r), value)
+
+    def SMR(self, instruction):
+        if type(instruction) == list:
+            self.r = int(instruction[1])
+            self.x = int(instruction[2])
+            self.address = int(instruction[3])
+            self.i = int(instruction[4])
+        else:
+            self.r = int(instruction[6:8], 2)
+            self.x = int(instruction[8:10], 2)
+            self.i = int(instruction[10:11], 2)
+            self.address = int(instruction[11:], 2)
+        self.get_computed_address()
+        value = self.memory.get(self.address, False)
+        r_value = int(self.registers['gpr'][self.r],2)
+        value = r_value - value
+        value = binaryUtils.to_binary_with_length(value, 16)
+        self.bus.emit_signal_gpr(str(self.r), value)
+
+    def AIR(self, instruction):
+        if type(instruction) == list:
+            self.r = int(instruction[1])
+            self.immed = int(instruction[2])
+        else:
+            self.r = int(instruction[6:8], 2)
+            self.immed = int(instruction[11:], 2)
+
+        r_value = int(self.registers['gpr'][self.r],2)
+        value = r_value + self.immed
+        value = binaryUtils.to_binary_with_length(value, 16)
+        self.bus.emit_signal_gpr(str(self.r), value)
+
+    def SIR(self, instruction):
+        if type(instruction) == list:
+            self.r = int(instruction[1])
+            self.immed = int(instruction[2])
+        else:
+            self.r = int(instruction[6:8], 2)
+            self.immed = int(instruction[11:], 2)
+
+        r_value = int(self.registers['gpr'][self.r],2)
+        value = r_value - self.immed
+        value = binaryUtils.to_binary_with_length(value, 16)
+        self.bus.emit_signal_gpr(str(self.r), value)
+
     def MLT(self, instruction):
         if type(instruction) == list:
             self.rx = int(instruction[1])
@@ -386,8 +451,8 @@ class ControlUnit:
         rx_value = int(rx_bin,2)
         ry_value = int(ry_bin, 2)
         product = rx_value * ry_value
-        if product > 2e32-1:
-            print('overflow')
+        if product > 2**32-1:
+            self.bus.emit_signal_cc('0001')
         else:
             product_bin = binaryUtils.to_binary_with_length(product,32)
             high_bits = product_bin[:16]
@@ -407,7 +472,7 @@ class ControlUnit:
         rx_value = int(rx_bin, 2)
         ry_value = int(ry_bin, 2)
         if ry_value == 0:
-            print('DIVZERO')
+            self.bus.emit_signal_cc('0100')
         else:
             quotient = rx_value // ry_value
             remainder = rx_value % ry_value
@@ -428,7 +493,7 @@ class ControlUnit:
         rx_value = int(rx_bin, 2)
         ry_value = int(ry_bin, 2)
         if rx_value == ry_value:
-            self.bus.emit_signal_cc('0001')
+            self.bus.emit_signal_cc('1000')
         else:
             self.bus.emit_signal_cc('0000')
 
@@ -477,9 +542,6 @@ class ControlUnit:
         print(res_bin)
         self.bus.emit_signal_gpr(str(self.rx), res_bin)
 
-
-    # Arithmetic and Logical Instructions:
-
     def SRC(self, instruction):
         if type(instruction) == list:
             self.R = int(instruction[1])
@@ -508,6 +570,8 @@ class ControlUnit:
             if self.LR == 1:
                 r_bin = r_bin[self.count:] + '0' * self.count
             else:
+                if self.count != 0:
+                    self.bus.emit_signal_cc('0010')
                 r_bin = a * self.count + r_bin[:-self.count]
             r_bin = s + r_bin
         self.bus.emit_signal_gpr(str(self.R), r_bin)
