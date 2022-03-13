@@ -19,7 +19,8 @@ class Simulator:
         'mfr': '',
         'cc': '',
         "fr0": '',
-        "fr1": ''
+        "fr1": '',
+        "keyboard": ''
     }
 
     # memory

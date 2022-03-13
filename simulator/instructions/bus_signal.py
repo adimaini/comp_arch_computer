@@ -25,6 +25,10 @@ class Communicate(QObject):
 
     set_memory = pyqtSignal(str, str)
 
+    set_console_keyboard = pyqtSignal(bool)
+
+    set_console_printer = pyqtSignal(str, bool)
+
     def emit_signal_gpr(self, no, value):
         self.set_gpr.emit(no, value)
 
@@ -54,4 +58,10 @@ class Communicate(QObject):
 
     def emit_signal_memory(self, address, value):
         self.set_memory.emit(address, value)
+
+    def emit_signal_keyboard(self, value):
+        self.set_console_keyboard.emit(value)
+
+    def emit_signal_printer(self, value, flag):
+        self.set_console_printer.emit(value, flag)
 

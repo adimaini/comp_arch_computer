@@ -28,7 +28,9 @@ class ControlUnit:
             'LDR': 1, 'STR': 2, 'LDA': 3, 'LDX': 41, 'STX': 42,
             'JZ': 10, 'JNE': 11, 'JCC': 12, 'JMA': 13, 'JSR': 14, 'RFS': 15, 'SOB': 16, 'JGE': 17,
             'MLT': 20, 'DVD': 21, 'TRR': 22, 'AND': 23, 'ORR': 24, 'NOT': 25, 'SRC': 31, 'RRC': 32,
-            'AMR': 4, 'SMR': 5, 'AIR': 6, 'SIR': 7, 'MLT':20, 'DVD':21, 'TRR':22, 'AND': 23, 'ORR': 24, 'NOT': 25, 'SRC': 31, 'RRC': 32
+            'AMR': 4, 'SMR': 5, 'AIR': 6, 'SIR': 7, 'MLT': 20, 'DVD': 21, 'TRR': 22, 'AND': 23, 'ORR': 24, 'NOT': 25,
+            'SRC': 31, 'RRC': 32,
+            'IN': 61, 'OUT': 62, 'CHK': 63
         }
 
     # decode a word: LDR,0,0,1,ADDRESS,0
@@ -36,7 +38,7 @@ class ControlUnit:
     def decodeAWord(self, word: str):
         if word.find(',') != -1:
             command = word.split(',')
-            self.opcode = self.command_dict[command[0]]
+            self.opcode = str(self.command_dict[command[0]])
             self.execute_function(command)
         else:
             self.opcode = oct(int(word[0:6], 2))[2:]
@@ -47,15 +49,18 @@ class ControlUnit:
     def execute_function(self, command):
         number_func_dict = {
             '1': self.LDR, '2': self.STR, '3': self.LDA, '41': self.LDX, '42': self.STX,
-            '10': self.JZ, '11': self.JNE, '12': self.JCC, '14': self.JSR, '15': self.RFS, '16': self.SOB, '17': self.JGE,
-            '4': self.AMR, '5': self.SMR, '6': self.AIR, '7': self.SIR, '20': self.MLT, '21': self.DVD, '22': self.TRR, '23': self.AND, '24': self.ORR, '25': self.NOT, '31': self.SRC, '32': self.RRC
+            '10': self.JZ, '11': self.JNE, '12': self.JCC, '14': self.JSR, '15': self.RFS, '16': self.SOB,
+            '17': self.JGE,
+            '4': self.AMR, '5': self.SMR, '6': self.AIR, '7': self.SIR, '20': self.MLT, '21': self.DVD, '22': self.TRR,
+            '23': self.AND, '24': self.ORR, '25': self.NOT, '31': self.SRC, '32': self.RRC,
+            '61': self.IN, '62': self.OUT, '63': self.CHK
         }
 
         method = number_func_dict.get(self.opcode)
         if method:
             method(command)  # execute the function
         else:
-            logging.error("Machine can't execute this instruction. Still need to improvement!")
+            logging.error(f"Machine can't execute this opcode{self.opcode} instruction.")
             return
 
     def get_a_ir_str(self, opcode, r, x, i, address):
@@ -76,6 +81,8 @@ class ControlUnit:
         pass
 
     # instruction function
+    # LDR,0,0,address,0/1
+    # 0000010000000000
     def LDR(self, instruction):
         if type(instruction) == list:
             self.r = int(instruction[1])
@@ -340,14 +347,92 @@ class ControlUnit:
         logging.info("PC changes into EA(%i)" % self.address)
         self.bus.emit_signal_pc(binaryUtils.to_binary_with_length(self.address, 12))
 
-    def JSR(self):
-        pass
+    def JSR(self, instruction):
+        if type(instruction) == list:
+            self.r = int(instruction[1])
+            self.x = int(instruction[2])
+            self.address = int(instruction[3])
+            self.i = int(instruction[4])
+        else:
+            self.r = int(instruction[6:8], 2)
+            self.x = int(instruction[8:10], 2)
+            self.i = int(instruction[10:11], 2)
+            self.address = int(instruction[11:], 2)
 
-    def RFS(self):
-        pass
+        ir_str = self.get_a_ir_str(self.opcode, self.r, self.x, self.i, self.address)
+        logging.info("JSR: The {%s} will be executed." % ir_str)
+        self.bus.emit_signal_ir(ir_str)
 
-    def SOB(self):
-        pass
+        pc_value = int(self.registers["pc"], 2) + 1;
+
+        logging.info("The pc+1 value{%s} will be stored in GPR3" % pc_value)
+        self.bus.emit_signal_gpr('3', binaryUtils.to_binary_with_length(pc_value, 16))
+
+        self.get_computed_address()
+        pc_12 = binaryUtils.to_binary_with_length(self.address, 12)
+        self.bus.emit_signal_mar(pc_12)
+        logging.info("The PC will be EA{%s}" % pc_12)
+        self.bus.emit_signal_pc(pc_12)
+
+    def RFS(self, instruction):
+        if type(instruction) == list:
+            self.r = int(instruction[1])
+            self.x = int(instruction[2])
+            self.i = int(instruction[3])
+            self.immed = int(instruction[4])
+        else:
+            self.r = int(instruction[6:8], 2)
+            self.ix = int(instruction[8:10], 2)
+            self.i = int(instruction[10:11], 2)
+            self.immed = int(instruction[11:], 2)
+
+        ir_str = self.get_a_ir_str(self.opcode, self.r, self.x, self.i, self.immed)
+        logging.info("RFS: The {%s} will be executed." % ir_str)
+        self.bus.emit_signal_ir(ir_str)
+
+        logging.info("The immed{%i} will be stored in R0." % self.immed)
+        self.bus.emit_signal_gpr('0', binaryUtils.to_binary_with_length(self.immed, 16))
+
+        r3_value = self.registers["gpr"][3]
+        value = binaryUtils.to_binary_with_length(int(r3_value, 2), 12)
+        logging.info("The PC will be changed into C(R3){%s}." % value)
+        self.bus.emit_signal_pc(value)
+
+    def SOB(self, instruction):
+        if type(instruction) == list:
+            self.r = int(instruction[1])
+            self.x = int(instruction[2])
+            self.address = int(instruction[3])
+            self.i = int(instruction[4])
+        else:
+            self.r = int(instruction[6:8], 2)
+            self.x = int(instruction[8:10], 2)
+            self.i = int(instruction[10:11], 2)
+            self.address = int(instruction[11:], 2)
+
+        ir_str = self.get_a_ir_str(self.opcode, self.r, self.x, self.i, self.address)
+        logging.info("SOB: The {%s} will be executed." % ir_str)
+        self.bus.emit_signal_ir(ir_str)
+
+        self.get_computed_address()
+
+        # r <- c(r)-1
+        logging.info("The GPR%i will minus 1." % self.r)
+        newR = int(self.registers['gpr'][self.r], 2) - 1
+        #self.r = newR
+        self.bus.emit_signal_gpr(str(self.r), binaryUtils.to_binary_with_length(newR, 16))
+
+        #c_r = self.registers['gpr'][self.r]
+        if newR > 0:
+            # PC <- EA
+            value = binaryUtils.to_binary_with_length(self.address, 12)
+            logging.info("The PC will be changed into {%s}." % value)
+            self.bus.emit_signal_pc(value)
+        else:
+            pc_value = self.registers['pc']
+            pc_value = int(pc_value, 2) + 1
+            logging.info("The PC will be +1.")
+            self.bus.emit_signal_pc(binaryUtils.to_binary_with_length(pc_value, 12))
 
     def JGE(self, instruction):
         if type(instruction) == list:
@@ -391,7 +476,7 @@ class ControlUnit:
             self.address = int(instruction[11:], 2)
         self.get_computed_address()
         value = self.memory.get(self.address, False)
-        r_value = int(self.registers['gpr'][self.r],2)
+        r_value = int(self.registers['gpr'][self.r], 2)
         value = r_value + value
         value = binaryUtils.to_binary_with_length(value, 16)
         self.bus.emit_signal_gpr(str(self.r), value)
@@ -409,7 +494,7 @@ class ControlUnit:
             self.address = int(instruction[11:], 2)
         self.get_computed_address()
         value = self.memory.get(self.address, False)
-        r_value = int(self.registers['gpr'][self.r],2)
+        r_value = int(self.registers['gpr'][self.r], 2)
         value = r_value - value
         value = binaryUtils.to_binary_with_length(value, 16)
         self.bus.emit_signal_gpr(str(self.r), value)
@@ -422,7 +507,7 @@ class ControlUnit:
             self.r = int(instruction[6:8], 2)
             self.immed = int(instruction[11:], 2)
 
-        r_value = int(self.registers['gpr'][self.r],2)
+        r_value = int(self.registers['gpr'][self.r], 2)
         value = r_value + self.immed
         value = binaryUtils.to_binary_with_length(value, 16)
         self.bus.emit_signal_gpr(str(self.r), value)
@@ -435,7 +520,7 @@ class ControlUnit:
             self.r = int(instruction[6:8], 2)
             self.immed = int(instruction[11:], 2)
 
-        r_value = int(self.registers['gpr'][self.r],2)
+        r_value = int(self.registers['gpr'][self.r], 2)
         value = r_value - self.immed
         value = binaryUtils.to_binary_with_length(value, 16)
         self.bus.emit_signal_gpr(str(self.r), value)
@@ -454,7 +539,7 @@ class ControlUnit:
         product = rx_value * ry_value
         if product > 2e32 - 1:
             print('overflow')
-        if product > 2**32-1:
+        if product > 2 ** 32 - 1:
             self.bus.emit_signal_cc('0001')
         else:
             product_bin = binaryUtils.to_binary_with_length(product, 32)
@@ -609,5 +694,71 @@ class ControlUnit:
         self.bus.emit_signal_gpr(str(self.R), r_bin)
 
     # I/O Operations :
+    def IN(self, instruction):
+        if type(instruction) == list:
+            self.r = int(instruction[1])
+            self.x = int(instruction[2])
+            self.dev_id = int(instruction[3])
+            self.i = int(instruction[4])
+        else:
+            self.r = int(instruction[6:8], 2)
+            self.x = int(instruction[12:], 2)
+            self.i = int(instruction[9], 2)
+            self.dev_id = int(instruction[8], 2)
+
+        ir_str = self.get_a_ir_str(self.opcode, self.r, self.x, self.i, self.dev_id)
+        logging.info("IN: The {%s} will be executed." % ir_str)
+        self.bus.emit_signal_ir(ir_str)
+
+        if self.dev_id == 0:
+            self.bus.emit_signal_keyboard(True)
+            keyboard_value = self.registers['keyboard']
+            # convert the keyboard_value into a 16-bit binary number
+            if keyboard_value == '':
+                logging.error("Error - You didn't input a value!")
+
+            logging.info(keyboard_value)
+
+        value = '1'
+        self.bus.emit_signal_gpr(str(self.r), value)
+
+
+    def OUT(self, instruction):
+        if type(instruction) == list:
+            self.r = int(instruction[1])
+            self.x = int(instruction[2])
+            self.dev_id = int(instruction[3])
+            self.i = int(instruction[4])
+        else:
+            self.r = int(instruction[6:8], 2)
+            self.x = int(instruction[12:], 2)
+            self.i = int(instruction[9], 2)
+            self.dev_id = int(instruction[8], 2)
+
+        ir_str = self.get_a_ir_str(self.opcode, self.r, self.x, self.i, self.dev_id)
+        logging.info("OUT: The {%s} will be executed." % ir_str)
+        self.bus.emit_signal_ir(ir_str)
+
+        if self.dev_id == 1:
+            value = self.registers['gpr'][self.r]
+            self.bus.emit_signal_printer(value, True)
+
+    def CHK(self, instruction):
+        if type(instruction) == list:
+            self.r = int(instruction[1])
+            self.x = int(instruction[2])
+            self.dev_id = int(instruction[3])
+            self.i = int(instruction[4])
+        else:
+            self.r = int(instruction[6:8], 2)
+            self.x = int(instruction[12:], 2)
+            self.i = int(instruction[9], 2)
+            self.dev_id = int(instruction[8], 2)
+
+        ir_str = self.get_a_ir_str(self.opcode, self.r, self.x, self.i, self.dev_id)
+        logging.info("OUT: The {%s} will be executed." % ir_str)
+        self.bus.emit_signal_ir(ir_str)
+
+        logging.info("Machine is OK, able to IN/OUT a value!")
 
     # Floating Point Instructions/Vector Operations:

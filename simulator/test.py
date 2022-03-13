@@ -1,27 +1,15 @@
 from utils import binaryUtils
 
 if __name__ == '__main__':
-    file_name = 'IPL.txt'
-    f = open(file_name)
-    line = f.readline()
-    while line:
-        if line[0] == '#' or line == '\n':
-            line = f.readline()
-            continue
 
-        if line.find('#') != -1:
-            end_index = line.find('#')
-            line = line[0:end_index]
-
-        line = line.strip('\n')
-        strs = line.split("\t")
-        address_bin_str = binaryUtils.hex_to_bin(strs[0])
-        value_bin_str = binaryUtils.hex_to_bin(strs[1])
-
-        print(line)
-        #print(strs)
-        # idx = int(address_bin_str, 2)
-        # list[idx].value = int(value_bin_str, 2)
-
-        line = f.readline()
-    f.close()
+    s = binaryUtils.hex_to_bin('3037')
+    print(s)
+    print(s[0:6])
+    print(oct(int(s[0:6], 2)))
+    print(s[6:8])
+    print(s[8:10])
+    print(s[10:11])
+    print(s[11:])
+    print(len('0000 0001 0000 0000'))
+    print(binaryUtils.to_binary_with_length(int('0100', 16), 16))
+    print(int('0000000100000000',2))

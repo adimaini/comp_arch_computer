@@ -13,8 +13,8 @@
 # Program starts at 0x100
 0100 0514 # Load R1 at 0x14
 0101 090C # STR R1 to 0xC
-0102 3037 # Print
-0103 3038 # Input
+0102 3037 # Print / Out
+0103 3038 # Input / In
 0104 8493 # LDX I2 at 0x13
 0105 050C # Load R1 at 0xC
 0106 1D01 # Sub 1 from R1

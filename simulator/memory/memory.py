@@ -1,5 +1,4 @@
-from utils import loggerConfig
-logger = loggerConfig.logger
+import logging
 
 class MemoryData:
     def __init__(self, address, value):
@@ -40,7 +39,7 @@ class Memory(MemoryData):
             value = int(value)
         print(address)
         if address < 6:
-            logger.critical('Addresses less than 6 are prohibited as they are reserved spaces: address %s, value: %s' % (str(address), str(value)))
+            logging.critical('Addresses less than 6 are prohibited as they are reserved spaces: address %s, value: %s' % (str(address), str(value)))
             raise Exception('Addresses less than 6 are prohibited as they are reserved spaces')
 
         # do we need logic for if the address is already set to another value? 
@@ -50,11 +49,11 @@ class Memory(MemoryData):
             # check if value already exists at this address. For now will continue to overwrite the value
             get_value = self.get(address, binary=False)
             if get_value is not None:
-                logger.info('Value already exists at this address in memory. Will continue to overwrite this value.. Previous value: %s' % str(get_value))
+                logging.info('Value already exists at this address in memory. Will continue to overwrite this value.. Previous value: %s' % str(get_value))
             
             # set the value attribute of the object
             setattr(self.memory_data[address], 'value', value)
-            logger.info('address %s and value %s set' % (str(address), str(value)))
+            logging.info('address %s and value %s set' % (str(address), str(value)))
     
 
     def get(self, address:str, binary:bool):
@@ -76,13 +75,13 @@ class Memory(MemoryData):
             address = int(address)
 
         if address < 6:
-            logger.critical('Addresses less than 6 are prohibited as they are reserved spaces: address %s' % str(address))
+            logging.critical('Addresses less than 6 are prohibited as they are reserved spaces: address %s' % str(address))
             raise Exception('Addresses less than 6 are prohibited as they are reserved spaces')
 
         try: 
             value = getattr(self.memory_data[address], 'value')
         except Exception as e: 
-            logger.debug('Exception occurs during retrieval of memory at address %s. Exception: %s' % (str(address), str(e)))
+            logging.debug('Exception occurs during retrieval of memory at address %s. Exception: %s' % (str(address), str(e)))
 
         return value
 
@@ -93,14 +92,14 @@ class Memory(MemoryData):
         self.memory_length = 4096
         # expands the memory while preserving current memory
         self.memory_data = list(MemoryData(i, 0) for i in range(self.memory_length) if getattr(MemoryData, 'value', None))
-        logger.info('memory expanded to %s' % str(self.memory_length))
+        logging.info('memory expanded to %s' % str(self.memory_length))
     
     def shrink_memory(self):
         'shrink the memory to memory length of 2048'
         self.memory_length = 2048
         # shrinks the memory while preserving address values if they exist
         self.memory_data = list(MemoryData(i, 0) for i in range(self.memory_length) if getattr(MemoryData, 'value', None))
-        logger.info('memory shrinked to %s' % str(self.memory_length))
+        logging.info('memory shrinked to %s' % str(self.memory_length))
 
     def get_word_length(self):
         'get current word length'

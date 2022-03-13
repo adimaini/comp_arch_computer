@@ -7,13 +7,12 @@
 # WARNING! All changes made in this file will be lost!
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QRect
-from PyQt5.QtWidgets import QLineEdit, QFrame, QPushButton
+from PyQt5.QtWidgets import QLineEdit, QFrame, QPushButton, QInputDialog
 
 from log.stream import QPlainTextEditLogger
 from utils import binaryUtils
 import os
 import logging
-
 
 class Ui_MainWindow(object):
 
@@ -882,6 +881,8 @@ class Ui_MainWindow(object):
         self.bus.set_cc.connect(self.cc_slot)
         self.bus.set_fr.connect(self.fr_slot)
         self.bus.set_memory.connect(self.memory_slot)
+        self.bus.set_console_keyboard.connect(self.keyboard_slot)
+        self.bus.set_console_printer.connect(self.printer_slot)
 
         # self.instructions = instructions()
         self.pc = self.le_pc.text()
@@ -940,7 +941,7 @@ class Ui_MainWindow(object):
         self.lbl_halt.setText(_translate("MainWindow", "HALT"))
         self.lbl_run.setText(_translate("MainWindow", "RUN"))
         self.btn_Reset.setText(_translate("MainWindow", "Reset"))
-        self.btn_inputWord.setText(_translate("MainWindow", "Input&&Exec"))
+        self.btn_inputWord.setText(_translate("MainWindow", "TestCommand"))
         self.btn_test_log.setText(_translate("MainWindow", "Test Log"))
 
     def log_test(self):
@@ -948,15 +949,15 @@ class Ui_MainWindow(object):
         logging.debug("debug")
         logging.error("error")
         logging.warning("warning")
+        text, ok = input.getText(self.centralwidget, "Console KeyBoard", "Input Value")
 
     def input_a_word(self):
         word = self.le_inputWord.text()
         if (len(word.strip()) == 0):
-            logging.error("Please input a word from inputArea")
+            logging.error("Please input a instruction from inputArea")
             return
 
         logging.info("Get a word {%s} from inputArea" % word)
-        # decode
         self.cu.decodeAWord(word)
 
     def gpr_slot(self, no, value):
@@ -1022,6 +1023,17 @@ class Ui_MainWindow(object):
         self.tb_memory_detail.item(row, 1).setText(value)
         self.tb_memory_detail.item(row, 2).setText(str(int(value, 2)))
 
+    def keyboard_slot(self, value: bool):
+        if bool:
+            # begin to input the value
+            text, ok = QInputDialog.getText(self.centralwidget, "KeyBoard", "Input Value:")
+            if text and ok:
+                self.registers['keyboard'] = text
+
+    def printer_slot(self, value: str, flag: bool):
+        if flag:
+            logging.info("Output A Value:{%s}" % value)
+
     def choose_file(self, Filepath):
         list = self.memory.memory_data
         file_name = QtWidgets.QFileDialog.getOpenFileName(None, "Choose File", "./",
@@ -1070,7 +1082,6 @@ class Ui_MainWindow(object):
     def reset(self):
         self.lbl_halt.setStyleSheet(Ui_MainWindow.gloabl_finish_process_status)
         self.lbl_run.setStyleSheet(Ui_MainWindow.gloabl_finish_process_status)
-
         #str = '0'
         self.registers["gpr"][0] = '0' * 16
         self.registers["gpr"][1] = '0' * 16
