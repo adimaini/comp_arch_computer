@@ -373,6 +373,7 @@ class ControlUnit:
         self.bus.emit_signal_mar(pc_12)
         logging.info("The PC will be EA{%s}" % pc_12)
         self.bus.emit_signal_pc(pc_12)
+        self.registers
 
     def RFS(self, instruction):
         if type(instruction) == list:
@@ -474,6 +475,11 @@ class ControlUnit:
             self.x = int(instruction[8:10], 2)
             self.i = int(instruction[10:11], 2)
             self.address = int(instruction[11:], 2)
+
+        ir_str = self.get_a_ir_str(self.opcode, self.r, self.x, self.i, self.address)
+        logging.info("AMR: The {%s} will be executed." % ir_str)
+        self.bus.emit_signal_ir(ir_str)
+
         self.get_computed_address()
         value = self.memory.get(self.address, False)
         r_value = int(self.registers['gpr'][self.r], 2)
@@ -492,6 +498,11 @@ class ControlUnit:
             self.x = int(instruction[8:10], 2)
             self.i = int(instruction[10:11], 2)
             self.address = int(instruction[11:], 2)
+
+        ir_str = self.get_a_ir_str(self.opcode, self.r, self.x, self.i, self.address)
+        logging.info("SMR: The {%s} will be executed." % ir_str)
+        self.bus.emit_signal_ir(ir_str)
+
         self.get_computed_address()
         value = self.memory.get(self.address, False)
         r_value = int(self.registers['gpr'][self.r], 2)
@@ -505,7 +516,13 @@ class ControlUnit:
             self.immed = int(instruction[2])
         else:
             self.r = int(instruction[6:8], 2)
+            self.x = int(instruction[8:10], 2)
+            self.i = int(instruction[10:11], 2)
             self.immed = int(instruction[11:], 2)
+
+        ir_str = self.get_a_ir_str(self.opcode, self.r, self.x, self.i, self.immed)
+        logging.info("AIR: The {%s} will be executed." % ir_str)
+        self.bus.emit_signal_ir(ir_str)
 
         r_value = int(self.registers['gpr'][self.r], 2)
         value = r_value + self.immed
@@ -518,7 +535,13 @@ class ControlUnit:
             self.immed = int(instruction[2])
         else:
             self.r = int(instruction[6:8], 2)
+            self.x = int(instruction[8:10], 2)
+            self.i = int(instruction[10:11], 2)
             self.immed = int(instruction[11:], 2)
+
+        ir_str = self.get_a_ir_str(self.opcode, self.r, self.x, self.i, self.immed)
+        logging.info("SIR: The {%s} will be executed." % ir_str)
+        self.bus.emit_signal_ir(ir_str)
 
         r_value = int(self.registers['gpr'][self.r], 2)
         value = r_value - self.immed
@@ -532,6 +555,10 @@ class ControlUnit:
         else:
             self.rx = int(instruction[6:8], 2)
             self.ry = int(instruction[8:10], 2)
+
+        logging.info("MLT: The {%s} will be executed." % instruction)
+        self.bus.emit_signal_ir(instruction)
+
         rx_bin = self.registers['gpr'][self.rx]
         ry_bin = self.registers['gpr'][self.ry]
         rx_value = int(rx_bin, 2)
@@ -555,6 +582,10 @@ class ControlUnit:
         else:
             self.rx = int(instruction[6:8], 2)
             self.ry = int(instruction[8:10], 2)
+
+        logging.info("DVD: The {%s} will be executed." % instruction)
+        self.bus.emit_signal_ir(instruction)
+
         rx_bin = self.registers['gpr'][self.rx]
         ry_bin = self.registers['gpr'][self.ry]
         rx_value = int(rx_bin, 2)
@@ -576,6 +607,10 @@ class ControlUnit:
         else:
             self.rx = int(instruction[6:8], 2)
             self.ry = int(instruction[8:10], 2)
+
+        logging.info("TRR: The {%s} will be executed." % instruction)
+        self.bus.emit_signal_ir(instruction)
+
         rx_bin = self.registers['gpr'][self.rx]
         ry_bin = self.registers['gpr'][self.ry]
         rx_value = int(rx_bin, 2)
@@ -592,6 +627,10 @@ class ControlUnit:
         else:
             self.rx = int(instruction[6:8], 2)
             self.ry = int(instruction[8:10], 2)
+
+        logging.info("AND: The {%s} will be executed." % instruction)
+        self.bus.emit_signal_ir(instruction)
+
         rx_bin = self.registers['gpr'][self.rx]
         ry_bin = self.registers['gpr'][self.ry]
         rx_value = int(rx_bin, 2)
@@ -607,6 +646,10 @@ class ControlUnit:
         else:
             self.rx = int(instruction[6:8], 2)
             self.ry = int(instruction[8:10], 2)
+
+        logging.info("ORR: The {%s} will be executed." % instruction)
+        self.bus.emit_signal_ir(instruction)
+
         rx_bin = self.registers['gpr'][self.rx]
         ry_bin = self.registers['gpr'][self.ry]
         rx_value = int(rx_bin, 2)
@@ -620,6 +663,10 @@ class ControlUnit:
             self.rx = int(instruction[1])
         else:
             self.rx = int(instruction[6:8], 2)
+
+        logging.info("NOT: The {%s} will be executed." % instruction)
+        self.bus.emit_signal_ir(instruction)
+
         rx_bin = self.registers['gpr'][self.rx]
         rx_value = int(rx_bin, 2)
         print(rx_value)
@@ -642,6 +689,9 @@ class ControlUnit:
             self.count = int(instruction[12:], 2)
             self.LR = int(instruction[9], 2)
             self.AL = int(instruction[8], 2)
+
+        logging.info("SRC: The {%s} will be executed." % instruction)
+        self.bus.emit_signal_ir(instruction)
 
         r_bin = self.registers['gpr'][self.R]
         if self.AL == 1:
@@ -676,6 +726,9 @@ class ControlUnit:
             self.count = int(instruction[12:], 2)
             self.LR = int(instruction[9], 2)
             self.AL = int(instruction[8], 2)
+
+        logging.info("RRC: The {%s} will be executed." % instruction)
+        self.bus.emit_signal_ir(instruction)
 
         r_bin = self.registers['gpr'][self.R]
         if self.AL == 1:

@@ -1231,16 +1231,21 @@ class Ui_MainWindow(object):
 
         instruction = binaryUtils.to_binary_with_length(instruction, 16)
         logging.info('SS: Get a instruction to %s' % instruction)
-        if oct(int(instruction[0:6], 2))[2:] == '0':
+        if oct(int(instruction[0:9], 2))[2:] == '0':
             logging.info('Machine Stop!')
             return self.HLT()
 
         self.cu.decodeAWord(instruction)
 
         # pc + 1
-        address = int(address, 2) + 1
-        address = bin(address)[2:]
-        address = '0' * (12 - len(address)) + address
+        address = self.le_pc.text()
+        opcode = oct(int(instruction[0:6], 2))[2:]
+
+        if int(opcode, 8) < int('10', 8) or int(opcode, 8) > int('17', 8):
+            address = int(address, 2) + 1
+            address = bin(address)[2:]
+            address = '0' * (12 - len(address)) + address
+
         self.le_pc.setText(address)
         self.lbl_halt.setStyleSheet(Ui_MainWindow.gloabl_under_process_status)
         self.lbl_run.setStyleSheet(Ui_MainWindow.gloabl_finish_process_status)
