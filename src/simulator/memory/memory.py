@@ -1,10 +1,12 @@
 import logging
 from logging.config import fileConfig
 from os import path
+from collections import deque
 
 # import the logging.ini file
 basepath = path.dirname(__file__)
 logging_ini_filepath = path.abspath(path.join(basepath, "..", "logging.ini"))
+#logging_ini_filepath = "C:\\Users\\will9\\OneDrive\\Desktop\\git_code\\comp_arch_computer\\src\\simulator\\logging.ini"
 fileConfig(logging_ini_filepath)
 logger = logging.getLogger()
 
@@ -20,7 +22,9 @@ class Memory(MemoryData):
     def __init__(self):
         self.word_length = 16
         self.memory_length = 2048
+        self.cache_length = 2
         self.memory_data = list(MemoryData(i, None) for i in range(self.memory_length))
+        self.cache = deque(MemoryData(None, None) for i in range(self.cache_length))
     
 
     def set(self, address:str, value:str, binary:bool):
@@ -61,9 +65,14 @@ class Memory(MemoryData):
             if get_value is not None:
                 logger.info('Value already exists at this address in memory. Will continue to overwrite this value.. Previous value: %s' % str(get_value))
             
-            # set the value attribute of the object
+            # set the address and value in cache
+            self._add_to_cache(MemoryData(address, value))
+            logger.info('address %s and value %s set in cache' % (str(address), str(value)))
+            
+            # set the vlaue to the memory
             setattr(self.memory_data[address], 'value', value)
-            logger.info('address %s and value %s set' % (str(address), str(value)))
+            setattr(self.memory_data[address], 'address', address)
+            logger.info('address %s and value %s set in memory' % (str(address), str(value)))
     
 
     def get(self, address:str, binary:bool):
@@ -88,12 +97,28 @@ class Memory(MemoryData):
             logger.critical('Addresses less than 6 are prohibited as they are reserved spaces: address %s' % str(address))
             raise Exception('Addresses less than 6 are prohibited as they are reserved spaces')
 
+        # try getting the value from the cache and if found, return it early and skip even checking the memory
+        for cache_object in self.cache: 
+            if address == cache_object.address:
+                logger.debug(
+                    "Value found in cache!"
+                )
+                return cache_object.value
+            
         try: 
             value = getattr(self.memory_data[address], 'value')
         except Exception as e: 
             logger.debug('Exception occurs during retrieval of memory at address %s. Exception: %s' % (str(address), str(e)))
 
+        if not value: 
+            logger.debug('Either address is incorrect or is not set in memory for address %s' % (str(address)))
         return value
+    
+    
+    def _add_to_cache(self, new_data):
+        self.cache.appendleft(new_data)
+        self.cache.pop()
+        
 
     def expand_memory(self):
         'expand the memory to length of 4096'

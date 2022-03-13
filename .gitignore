@@ -11,3 +11,8 @@ src/simulator/__pycache__/Project1.cpython-39.pyc
 src/simulator/__pycache__/GUI.cpython-39.pyc
 src/simulator/__pycache__/GUI.cpython-39.pyc
 src/simulator/utils/__pycache__/__init__.cpython-39.pyc
+simulator/.idea/*
+simulator/__pycache__/*
+src/simulator/memory/memory_test.ipynb
+src/simulator/memory/__pycache__/__init__.cpython-39.pyc~f721a039c7d2de872b0e9b8a96036821f687597c
+src/simulator/memory/__pycache__/memory.cpython-39.pyc~f721a039c7d2de872b0e9b8a96036821f687597c
