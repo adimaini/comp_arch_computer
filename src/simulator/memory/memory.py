@@ -22,7 +22,7 @@ class Memory(MemoryData):
     def __init__(self):
         self.word_length = 16
         self.memory_length = 2048
-        self.cache_length = 2
+        self.cache_length = 16
         self.memory_data = list(MemoryData(i, None) for i in range(self.memory_length))
         self.cache = deque(MemoryData(None, None) for i in range(self.cache_length))
     
