@@ -420,17 +420,19 @@ class ControlUnit:
         # r <- c(r)-1
         logging.info("The GPR%i will minus 1." % self.r)
         newR = int(self.registers['gpr'][self.r], 2) - 1
-        #self.r = newR
+        print("newR:", newR)
         self.bus.emit_signal_gpr(str(self.r), binaryUtils.to_binary_with_length(newR, 16))
 
         #c_r = self.registers['gpr'][self.r]
         if newR > 0:
+            print("PC<-EA")
             # PC <- EA
             value = binaryUtils.to_binary_with_length(self.address, 12)
             logging.info("The PC will be changed into {%s}." % value)
             self.bus.emit_signal_pc(value)
         else:
             pc_value = self.registers['pc']
+            print(int(pc_value, 2))
             pc_value = int(pc_value, 2) + 1
             logging.info("The PC will be +1.")
             self.bus.emit_signal_pc(binaryUtils.to_binary_with_length(pc_value, 12))

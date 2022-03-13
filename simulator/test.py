@@ -3,7 +3,7 @@ from utils import binaryUtils
 if __name__ == '__main__':
 
     #print(int('0000 1010 0000 1111', 2))
-
+    print(binaryUtils.to_binary_with_length(-1, 16))
 
     s = binaryUtils.hex_to_bin('0102')
     print(int(s,2))

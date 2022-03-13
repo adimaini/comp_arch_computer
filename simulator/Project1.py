@@ -1238,15 +1238,15 @@ class Ui_MainWindow(object):
         self.cu.decodeAWord(instruction)
 
         # pc + 1
-        address = self.le_pc.text()
         opcode = oct(int(instruction[0:6], 2))[2:]
 
         if int(opcode, 8) < int('10', 8) or int(opcode, 8) > int('17', 8):
+            address = self.le_pc.text()
             address = int(address, 2) + 1
-            address = bin(address)[2:]
-            address = '0' * (12 - len(address)) + address
+            pc_str = binaryUtils.to_binary_with_length(address, 12)
+            self.registers['pc'] = pc_str
+            self.le_pc.setText(pc_str)
 
-        self.le_pc.setText(address)
         self.lbl_halt.setStyleSheet(Ui_MainWindow.gloabl_under_process_status)
         self.lbl_run.setStyleSheet(Ui_MainWindow.gloabl_finish_process_status)
 
