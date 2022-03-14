@@ -1032,6 +1032,7 @@ class Ui_MainWindow(object):
 
     def printer_slot(self, value: str, flag: bool):
         if flag:
+            print('out',value,int(value,2))
             logging.info("Output A Value:{%s}" % value)
 
     def choose_file(self, Filepath):
