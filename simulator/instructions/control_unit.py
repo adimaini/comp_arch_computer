@@ -49,7 +49,7 @@ class ControlUnit:
     def execute_function(self, command):
         number_func_dict = {
             '1': self.LDR, '2': self.STR, '3': self.LDA, '41': self.LDX, '42': self.STX,
-            '10': self.JZ, '11': self.JNE, '12': self.JCC, '14': self.JSR, '15': self.RFS, '16': self.SOB,
+            '10': self.JZ, '11': self.JNE, '12': self.JCC, '13':self.JMA, '14': self.JSR, '15': self.RFS, '16': self.SOB,
             '17': self.JGE,
             '4': self.AMR, '5': self.SMR, '6': self.AIR, '7': self.SIR, '20': self.MLT, '21': self.DVD, '22': self.TRR,
             '23': self.AND, '24': self.ORR, '25': self.NOT, '31': self.SRC, '32': self.RRC,
@@ -111,8 +111,6 @@ class ControlUnit:
         value = binaryUtils.to_binary_with_length(value, 16)
         logging.info("The value {%s} will be stored in GPR%i" % (value, self.r))
         self.bus.emit_signal_mbr(value)
-        print(self.r)
-        print(str(self.r))
         self.bus.emit_signal_gpr(str(self.r), value)
 
     def STR(self, instruction):
@@ -342,10 +340,10 @@ class ControlUnit:
         self.bus.emit_signal_ir(ir_str)
 
         self.get_computed_address()
-
-        self.bus.emit_signal_mar(self.address, 12)
-        logging.info("PC changes into EA(%i)" % self.address)
-        self.bus.emit_signal_pc(binaryUtils.to_binary_with_length(self.address, 12))
+        self.address = binaryUtils.to_binary_with_length(self.address,12)
+        self.bus.emit_signal_mar(self.address)
+        logging.info("PC changes into EA(%s)" % self.address)
+        self.bus.emit_signal_pc(self.address)
 
     def JSR(self, instruction):
         if type(instruction) == list:
@@ -367,13 +365,12 @@ class ControlUnit:
 
         logging.info("The pc+1 value{%s} will be stored in GPR3" % pc_value)
         self.bus.emit_signal_gpr('3', binaryUtils.to_binary_with_length(pc_value, 16))
-
         self.get_computed_address()
         pc_12 = binaryUtils.to_binary_with_length(self.address, 12)
         self.bus.emit_signal_mar(pc_12)
         logging.info("The PC will be EA{%s}" % pc_12)
         self.bus.emit_signal_pc(pc_12)
-        self.registers
+        #self.registers
 
     def RFS(self, instruction):
         if type(instruction) == list:
@@ -420,7 +417,6 @@ class ControlUnit:
         # r <- c(r)-1
         logging.info("The GPR%i will minus 1." % self.r)
         newR = int(self.registers['gpr'][self.r], 2) - 1
-        print("newR:", newR)
         self.bus.emit_signal_gpr(str(self.r), binaryUtils.to_binary_with_length(newR, 16))
 
         #c_r = self.registers['gpr'][self.r]
@@ -432,7 +428,6 @@ class ControlUnit:
             self.bus.emit_signal_pc(value)
         else:
             pc_value = self.registers['pc']
-            print(int(pc_value, 2))
             pc_value = int(pc_value, 2) + 1
             logging.info("The PC will be +1.")
             self.bus.emit_signal_pc(binaryUtils.to_binary_with_length(pc_value, 12))
@@ -566,8 +561,6 @@ class ControlUnit:
         rx_value = int(rx_bin, 2)
         ry_value = int(ry_bin, 2)
         product = rx_value * ry_value
-        if product > 2e32 - 1:
-            print('overflow')
         if product > 2 ** 32 - 1:
             self.bus.emit_signal_cc('0001')
         else:
@@ -671,11 +664,8 @@ class ControlUnit:
 
         rx_bin = self.registers['gpr'][self.rx]
         rx_value = int(rx_bin, 2)
-        print(rx_value)
         res = ~rx_value
-        print(res)
         res_bin = binaryUtils.to_binary_with_length(res, 16)
-        print(res_bin)
         self.bus.emit_signal_gpr(str(self.rx), res_bin)
 
     # Arithmetic and Logical Instructions:
@@ -757,9 +747,9 @@ class ControlUnit:
             self.i = int(instruction[4])
         else:
             self.r = int(instruction[6:8], 2)
-            self.x = int(instruction[12:], 2)
-            self.i = int(instruction[9], 2)
-            self.dev_id = int(instruction[8], 2)
+            self.x = int(instruction[8:10], 2)
+            self.i = int(instruction[10], 2)
+            self.dev_id = int(instruction[11:], 2)
 
         ir_str = self.get_a_ir_str(self.opcode, self.r, self.x, self.i, self.dev_id)
         logging.info("IN: The {%s} will be executed." % ir_str)
@@ -772,9 +762,9 @@ class ControlUnit:
             if keyboard_value == '':
                 logging.error("Error - You didn't input a value!")
 
-            logging.info(keyboard_value)
+            logging.info("Input a value is: %s" % keyboard_value)
 
-        value = '1'
+        value = binaryUtils.to_binary_with_length(int(keyboard_value), 16)
         self.bus.emit_signal_gpr(str(self.r), value)
 
 
@@ -786,9 +776,9 @@ class ControlUnit:
             self.i = int(instruction[4])
         else:
             self.r = int(instruction[6:8], 2)
-            self.x = int(instruction[12:], 2)
-            self.i = int(instruction[9], 2)
-            self.dev_id = int(instruction[8], 2)
+            self.x = int(instruction[8:10], 2)
+            self.i = int(instruction[10], 2)
+            self.dev_id = int(instruction[11:], 2)
 
         ir_str = self.get_a_ir_str(self.opcode, self.r, self.x, self.i, self.dev_id)
         logging.info("OUT: The {%s} will be executed." % ir_str)
@@ -813,7 +803,8 @@ class ControlUnit:
         ir_str = self.get_a_ir_str(self.opcode, self.r, self.x, self.i, self.dev_id)
         logging.info("OUT: The {%s} will be executed." % ir_str)
         self.bus.emit_signal_ir(ir_str)
-
+        devid = binaryUtils.to_binary_with_length(1,16)
+        self.bus.emit_signal_gpr(str(self.r),devid)
         logging.info("Machine is OK, able to IN/OUT a value!")
 
     # Floating Point Instructions/Vector Operations:
